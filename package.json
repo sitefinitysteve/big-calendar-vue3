@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@vee-validate/zod": "^4.15.1",
+    "@vueuse/core": "^14.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-vue-next": "^0.564.0",
     "pinia": "^3.0.4",
+    "reka-ui": "^2.8.0",
     "tailwind-merge": "^3.4.0",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.28",
@@ -23,8 +25,10 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^25.2.3",
     "@vitejs/plugin-vue": "^6.0.4",
     "tailwindcss": "^4.1.18",
+    "tw-animate-css": "^1.4.0",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.4"
   }
