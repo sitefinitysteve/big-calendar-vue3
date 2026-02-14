@@ -13,6 +13,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   openDetails: [event: IEvent]
+  selectDay: [date: Date]
 }>()
 
 const store = useCalendarStore()
@@ -45,6 +46,7 @@ const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         :events="allEvents"
         :event-positions="eventPositions"
         @open-details="emit('openDetails', $event)"
+        @select-day="emit('selectDay', $event)"
       />
     </div>
   </div>

@@ -11,7 +11,7 @@ import {
 
 const store = useCalendarStore()
 
-function handleChange(value: string) {
+function handleChange(value: string | number | bigint | Record<string, any> | null) {
   store.badgeVariant = value as TBadgeVariant
 }
 </script>

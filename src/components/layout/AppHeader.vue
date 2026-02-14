@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Calendar, ArrowUpRight } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
 import ToggleTheme from '@/components/layout/ToggleTheme.vue'
 </script>
 

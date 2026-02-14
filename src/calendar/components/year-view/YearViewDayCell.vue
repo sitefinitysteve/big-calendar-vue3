@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { isToday } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
@@ -13,7 +12,10 @@ const props = defineProps<{
   events: IEvent[]
 }>()
 
-const router = useRouter()
+const emit = defineEmits<{
+  selectDay: [date: Date]
+}>()
+
 const store = useCalendarStore()
 
 const maxIndicators = 3
@@ -33,7 +35,7 @@ const isTodayCell = computed(() => isToday(props.date))
 const visibleDots = computed(() => {
   if (props.events.length === 0) return []
   if (props.events.length <= maxIndicators) return props.events
-  return [props.events[0]]
+  return props.events.slice(0, 1)
 })
 
 const overflowCount = computed(() => {
@@ -43,7 +45,7 @@ const overflowCount = computed(() => {
 
 function handleClick() {
   store.setSelectedDate(props.date)
-  router.push('/day-view')
+  emit('selectDay', props.date)
 }
 </script>
 

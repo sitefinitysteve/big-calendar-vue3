@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { isSameDay, parseISO, getDaysInMonth, startOfMonth, format } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
@@ -12,7 +11,11 @@ const props = defineProps<{
   events: IEvent[]
 }>()
 
-const router = useRouter()
+const emit = defineEmits<{
+  selectDay: [date: Date]
+  selectMonth: [date: Date]
+}>()
+
 const store = useCalendarStore()
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -43,7 +46,7 @@ function getEventsForDay(day: number): IEvent[] {
 
 function handleMonthClick() {
   store.setSelectedDate(startOfMonth(props.month))
-  router.push('/month-view')
+  emit('selectMonth', props.month)
 }
 </script>
 
@@ -76,6 +79,7 @@ function handleMonthClick() {
           :day="day"
           :date="getDateForDay(day)"
           :events="getEventsForDay(day)"
+          @select-day="emit('selectDay', $event)"
         />
       </template>
     </div>

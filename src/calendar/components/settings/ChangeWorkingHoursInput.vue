@@ -35,7 +35,7 @@ const localHours = reactive<TWorkingHours>(
 )
 
 function isDayActive(dayIndex: number): boolean {
-  const day = localHours[dayIndex]
+  const day = localHours[dayIndex]!
   return day.from > 0 || day.to > 0
 }
 
@@ -48,11 +48,15 @@ function handleToggle(dayIndex: number, checked: boolean) {
 }
 
 function handleFromChange(dayIndex: number, value: { hour: number; minute: number }) {
-  localHours[dayIndex] = { ...localHours[dayIndex], from: value.hour }
+  localHours[dayIndex] = { ...localHours[dayIndex]!, from: value.hour }
 }
 
 function handleToChange(dayIndex: number, value: { hour: number; minute: number }) {
-  localHours[dayIndex] = { ...localHours[dayIndex], to: value.hour }
+  localHours[dayIndex] = { ...localHours[dayIndex]!, to: value.hour }
+}
+
+function getHours(dayIndex: number) {
+  return localHours[dayIndex] ?? { from: 0, to: 0 }
 }
 
 function handleApply() {
@@ -92,13 +96,13 @@ function handleApply() {
         <template v-if="isDayActive(day.index)">
           <div class="flex flex-1 items-center gap-2">
             <TimeInput
-              :model-value="{ hour: localHours[day.index].from, minute: 0 }"
+              :model-value="{ hour: getHours(day.index).from, minute: 0 }"
               :hour-cycle="12"
               @update:model-value="handleFromChange(day.index, $event)"
             />
             <span class="text-sm text-muted-foreground">to</span>
             <TimeInput
-              :model-value="{ hour: localHours[day.index].to, minute: 0 }"
+              :model-value="{ hour: getHours(day.index).to, minute: 0 }"
               :hour-cycle="12"
               @update:model-value="handleToChange(day.index, $event)"
             />

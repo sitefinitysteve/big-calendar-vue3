@@ -5,8 +5,13 @@ import { useCalendarStore } from '@/stores/calendar'
 import YearViewMonth from '@/calendar/components/year-view/YearViewMonth.vue'
 import type { IEvent } from '@/calendar/interfaces'
 
-const props = defineProps<{
+defineProps<{
   allEvents: IEvent[]
+}>()
+
+const emit = defineEmits<{
+  selectDay: [date: Date]
+  selectMonth: [date: Date]
 }>()
 
 const store = useCalendarStore()
@@ -24,6 +29,8 @@ const months = computed(() => {
       :key="month.toISOString()"
       :month="month"
       :events="allEvents"
+      @select-day="emit('selectDay', $event)"
+      @select-month="emit('selectMonth', $event)"
     />
   </div>
 </template>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { isToday, startOfDay } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import EventBullet from '@/calendar/components/month-view/EventBullet.vue'
@@ -17,9 +16,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   openDetails: [event: IEvent]
+  selectDay: [date: Date]
 }>()
 
-const router = useRouter()
 const store = useCalendarStore()
 
 const MAX_VISIBLE_EVENTS = 3
@@ -32,7 +31,7 @@ const isSunday = computed(() => props.cell.date.getDay() === 0)
 
 function handleClick() {
   store.setSelectedDate(props.cell.date)
-  router.push('/day-view')
+  emit('selectDay', props.cell.date)
 }
 </script>
 

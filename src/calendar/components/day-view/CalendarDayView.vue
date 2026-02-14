@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { format, parseISO, isSameDay, areIntervalsOverlapping } from 'date-fns'
+import { format, parseISO, areIntervalsOverlapping } from 'date-fns'
 import { CalendarDate } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { Calendar as CalendarIcon, Clock, User } from 'lucide-vue-next'

@@ -15,7 +15,7 @@ const DEFAULT_WORKING_HOURS: TWorkingHours = {
 
 const DEFAULT_VISIBLE_HOURS: TVisibleHours = { from: 7, to: 18 }
 
-export const useCalendarStore = defineStore('calendar', () => {
+export const useCalendarStore = defineStore('big-calendar', () => {
   const selectedDate = ref(new Date())
   const selectedUserId = ref<string | 'all'>('all')
   const badgeVariant = ref<TBadgeVariant>('colored')
@@ -29,6 +29,14 @@ export const useCalendarStore = defineStore('calendar', () => {
     selectedDate.value = date
   }
 
+  function addEvent(event: IEvent) {
+    events.value = [...events.value, {
+      ...event,
+      startDate: new Date(event.startDate).toISOString(),
+      endDate: new Date(event.endDate).toISOString(),
+    }]
+  }
+
   function updateEvent(updatedEvent: IEvent) {
     const index = events.value.findIndex(e => e.id === updatedEvent.id)
     if (index === -1) return
@@ -37,6 +45,10 @@ export const useCalendarStore = defineStore('calendar', () => {
       { ...updatedEvent, startDate: new Date(updatedEvent.startDate).toISOString(), endDate: new Date(updatedEvent.endDate).toISOString() },
       ...events.value.slice(index + 1),
     ]
+  }
+
+  function deleteEvent(eventId: number) {
+    events.value = events.value.filter(e => e.id !== eventId)
   }
 
   function initialize(initialUsers: IUser[], initialEvents: IEvent[]) {
@@ -53,7 +65,9 @@ export const useCalendarStore = defineStore('calendar', () => {
     workingHours,
     visibleHours,
     setSelectedDate,
+    addEvent,
     updateEvent,
+    deleteEvent,
     initialize,
   }
 })

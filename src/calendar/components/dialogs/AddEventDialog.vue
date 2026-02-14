@@ -4,6 +4,7 @@ import { AlertTriangle } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useCalendarStore } from '@/stores/calendar'
+import type { IEvent } from '@/calendar/interfaces'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -46,6 +47,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
+  'eventCreated': [event: IEvent]
 }>()
 
 const store = useCalendarStore()
@@ -78,8 +80,28 @@ watch(
   },
 )
 
-const onSubmit = handleSubmit(_values => {
-  // TODO: Create add-event functionality
+const onSubmit = handleSubmit(values => {
+  const user = store.users.find(u => u.id === values.user)
+  if (!user) return
+
+  const startDateTime = new Date(values.startDate)
+  startDateTime.setHours(values.startTime.hour, values.startTime.minute)
+
+  const endDateTime = new Date(values.endDate)
+  endDateTime.setHours(values.endTime.hour, values.endTime.minute)
+
+  const newEvent: IEvent = {
+    id: Date.now(),
+    user,
+    title: values.title,
+    color: values.color,
+    description: values.description,
+    startDate: startDateTime.toISOString(),
+    endDate: endDateTime.toISOString(),
+  }
+
+  store.addEvent(newEvent)
+  emit('eventCreated', newEvent)
   emit('update:open', false)
   resetForm()
 })
@@ -119,7 +141,7 @@ const EVENT_COLORS = [
                   <SelectItem v-for="user in store.users" :key="user.id" :value="user.id">
                     <div class="flex items-center gap-2">
                       <Avatar class="size-6">
-                        <AvatarImage :src="user.picturePath ?? undefined" :alt="user.name" />
+                        <AvatarImage :src="user.picturePath ?? ''" :alt="user.name" />
                         <AvatarFallback class="text-xxs">{{ user.name[0] }}</AvatarFallback>
                       </Avatar>
                       <p class="truncate">{{ user.name }}</p>

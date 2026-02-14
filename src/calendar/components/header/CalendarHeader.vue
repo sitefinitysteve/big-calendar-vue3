@@ -14,14 +14,15 @@ defineProps<{
 
 const emit = defineEmits<{
   addEvent: []
+  changeView: [view: TCalendarView]
 }>()
 
 const viewButtons = [
-  { view: 'day' as const, to: '/day-view', label: 'View by day', icon: List, roundedClass: 'rounded-r-none' },
-  { view: 'week' as const, to: '/week-view', label: 'View by week', icon: Columns, roundedClass: '-ml-px rounded-none' },
-  { view: 'month' as const, to: '/month-view', label: 'View by month', icon: Grid2x2, roundedClass: '-ml-px rounded-none' },
-  { view: 'year' as const, to: '/year-view', label: 'View by year', icon: Grid3x3, roundedClass: '-ml-px rounded-none' },
-  { view: 'agenda' as const, to: '/agenda-view', label: 'View by agenda', icon: CalendarRange, roundedClass: '-ml-px rounded-l-none' },
+  { view: 'day' as const, label: 'View by day', icon: List, roundedClass: 'rounded-r-none' },
+  { view: 'week' as const, label: 'View by week', icon: Columns, roundedClass: '-ml-px rounded-none' },
+  { view: 'month' as const, label: 'View by month', icon: Grid2x2, roundedClass: '-ml-px rounded-none' },
+  { view: 'year' as const, label: 'View by year', icon: Grid3x3, roundedClass: '-ml-px rounded-none' },
+  { view: 'agenda' as const, label: 'View by agenda', icon: CalendarRange, roundedClass: '-ml-px rounded-l-none' },
 ] as const
 </script>
 
@@ -35,20 +36,17 @@ const viewButtons = [
     <div class="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-between">
       <div class="flex w-full items-center gap-1.5">
         <div class="inline-flex">
-          <RouterLink
+          <Button
             v-for="btn in viewButtons"
             :key="btn.view"
-            :to="btn.to"
+            :aria-label="btn.label"
+            size="icon"
+            :variant="view === btn.view ? 'default' : 'outline'"
+            :class="[btn.roundedClass, '[&_svg]:size-5']"
+            @click="emit('changeView', btn.view)"
           >
-            <Button
-              :aria-label="btn.label"
-              size="icon"
-              :variant="view === btn.view ? 'default' : 'outline'"
-              :class="[btn.roundedClass, '[&_svg]:size-5']"
-            >
-              <component :is="btn.icon" :stroke-width="1.8" />
-            </Button>
-          </RouterLink>
+            <component :is="btn.icon" :stroke-width="1.8" />
+          </Button>
         </div>
 
         <UserSelect />

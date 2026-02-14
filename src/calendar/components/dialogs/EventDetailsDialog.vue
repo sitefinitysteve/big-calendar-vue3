@@ -19,6 +19,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:open': [value: boolean]
   edit: [event: IEvent]
+  delete: [event: IEvent]
 }>()
 
 const startDate = parseISO(props.event.startDate)
@@ -66,7 +67,10 @@ const endDate = parseISO(props.event.endDate)
         </div>
       </div>
 
-      <DialogFooter>
+      <DialogFooter class="flex-row gap-2 sm:justify-between">
+        <Button type="button" variant="destructive" @click="emit('delete', event)">
+          Delete
+        </Button>
         <Button type="button" variant="outline" @click="emit('edit', event)">
           Edit
         </Button>

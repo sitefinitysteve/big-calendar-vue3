@@ -12,8 +12,8 @@ import {
 
 const store = useCalendarStore()
 
-function handleValueChange(value: string) {
-  store.selectedUserId = value
+function handleValueChange(value: string | number | bigint | Record<string, any> | null) {
+  store.selectedUserId = value as string
 }
 </script>
 
@@ -32,7 +32,7 @@ function handleValueChange(value: string) {
               :key="user.id"
               class="size-6 text-xxs"
             >
-              <AvatarImage :src="user.picturePath ?? undefined" :alt="user.name" />
+              <AvatarImage :src="user.picturePath ?? ''" :alt="user.name" />
               <AvatarFallback class="text-xxs">
                 {{ user.name[0] }}
               </AvatarFallback>
@@ -50,7 +50,7 @@ function handleValueChange(value: string) {
       >
         <div class="flex items-center gap-2">
           <Avatar class="size-6">
-            <AvatarImage :src="user.picturePath ?? undefined" :alt="user.name" />
+            <AvatarImage :src="user.picturePath ?? ''" :alt="user.name" />
             <AvatarFallback class="text-xxs">
               {{ user.name[0] }}
             </AvatarFallback>

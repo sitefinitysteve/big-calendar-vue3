@@ -44,6 +44,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
+  'eventUpdated': [event: IEvent]
 }>()
 
 const store = useCalendarStore()
@@ -52,7 +53,7 @@ const { updateEvent } = useUpdateEvent()
 const startParsed = parseISO(props.event.startDate)
 const endParsed = parseISO(props.event.endDate)
 
-const { handleSubmit, resetForm } = useForm({
+const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(eventSchema),
   initialValues: {
     user: props.event.user.id,
@@ -76,7 +77,7 @@ const onSubmit = handleSubmit(values => {
   const endDateTime = new Date(values.endDate)
   endDateTime.setHours(values.endTime.hour, values.endTime.minute)
 
-  updateEvent({
+  const updatedEvent: IEvent = {
     ...props.event,
     user,
     title: values.title,
@@ -84,8 +85,10 @@ const onSubmit = handleSubmit(values => {
     description: values.description,
     startDate: startDateTime.toISOString(),
     endDate: endDateTime.toISOString(),
-  })
+  }
 
+  updateEvent(updatedEvent)
+  emit('eventUpdated', updatedEvent)
   emit('update:open', false)
 })
 
@@ -124,7 +127,7 @@ const EVENT_COLORS = [
                   <SelectItem v-for="user in store.users" :key="user.id" :value="user.id">
                     <div class="flex items-center gap-2">
                       <Avatar class="size-6">
-                        <AvatarImage :src="user.picturePath ?? undefined" :alt="user.name" />
+                        <AvatarImage :src="user.picturePath ?? ''" :alt="user.name" />
                         <AvatarFallback class="text-xxs">{{ user.name[0] }}</AvatarFallback>
                       </Avatar>
                       <p class="truncate">{{ user.name }}</p>

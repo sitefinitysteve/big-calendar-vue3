@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import type { TCalendarView } from '@/calendar/types'
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarStore } from '@/stores/calendar'
 import { useFilteredEvents } from '@/calendar/composables/useFilteredEvents'
 import CalendarHeader from '@/calendar/components/header/CalendarHeader.vue'
 import CalendarMonthView from '@/calendar/components/month-view/CalendarMonthView.vue'
@@ -15,9 +16,21 @@ import AddEventDialog from '@/calendar/components/dialogs/AddEventDialog.vue'
 
 const props = defineProps<{ view: TCalendarView }>()
 
+const emit = defineEmits<{
+  'update:view': [view: TCalendarView]
+  'eventCreated': [event: IEvent]
+  'eventUpdated': [event: IEvent]
+  'eventDeleted': [event: IEvent]
+}>()
+
+const store = useCalendarStore()
 const viewRef = computed(() => props.view)
 
-const { filteredEvents, singleDayEvents, multiDayEvents, eventStartDates } = useFilteredEvents(viewRef)
+function handleChangeView(view: TCalendarView) {
+  emit('update:view', view)
+}
+
+const { filteredEvents, singleDayEvents, multiDayEvents } = useFilteredEvents(viewRef)
 
 // Dialog state
 const detailsOpen = ref(false)
@@ -38,22 +51,38 @@ function handleEdit(event: IEvent) {
   editOpen.value = true
 }
 
+function handleDelete(event: IEvent) {
+  store.deleteEvent(event.id)
+  detailsOpen.value = false
+  selectedEvent.value = null
+  emit('eventDeleted', event)
+}
+
 function handleAddEvent(startDate?: Date, startTime?: { hour: number; minute: number }) {
   addEventStartDate.value = startDate
   addEventStartTime.value = startTime
   addOpen.value = true
 }
+
+function handleEventCreated(event: IEvent) {
+  emit('eventCreated', event)
+}
+
+function handleEventUpdated(event: IEvent) {
+  emit('eventUpdated', event)
+}
 </script>
 
 <template>
   <div class="overflow-hidden rounded-xl border">
-    <CalendarHeader :view="view" :events="filteredEvents" @add-event="handleAddEvent()" />
+    <CalendarHeader :view="view" :events="filteredEvents" @add-event="handleAddEvent()" @change-view="handleChangeView" />
 
     <CalendarMonthView
       v-if="view === 'month'"
       :single-day-events="singleDayEvents"
       :multi-day-events="multiDayEvents"
       @open-details="handleOpenDetails"
+      @select-day="emit('update:view', 'day')"
     />
 
     <CalendarWeekView
@@ -75,6 +104,8 @@ function handleAddEvent(startDate?: Date, startTime?: { hour: number; minute: nu
     <CalendarYearView
       v-else-if="view === 'year'"
       :all-events="filteredEvents"
+      @select-day="emit('update:view', 'day')"
+      @select-month="emit('update:view', 'month')"
     />
 
     <CalendarAgendaView
@@ -92,6 +123,7 @@ function handleAddEvent(startDate?: Date, startTime?: { hour: number; minute: nu
     :open="detailsOpen"
     @update:open="detailsOpen = $event"
     @edit="handleEdit"
+    @delete="handleDelete"
   />
 
   <EditEventDialog
@@ -100,6 +132,7 @@ function handleAddEvent(startDate?: Date, startTime?: { hour: number; minute: nu
     :event="selectedEvent"
     :open="editOpen"
     @update:open="editOpen = $event"
+    @event-updated="handleEventUpdated"
   />
 
   <AddEventDialog
@@ -107,5 +140,6 @@ function handleAddEvent(startDate?: Date, startTime?: { hour: number; minute: nu
     :start-date="addEventStartDate"
     :start-time="addEventStartTime"
     @update:open="addOpen = $event"
+    @event-created="handleEventCreated"
   />
 </template>

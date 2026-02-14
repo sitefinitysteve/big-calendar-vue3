@@ -125,13 +125,13 @@ const mockGenerator = (numberOfEvents: number): IEvent[] => {
       title: 'My wedding :)',
       color: 'red',
       description: "Can't wait to see the most beautiful woman in that dress!",
-      user: USERS_MOCK[0],
+      user: USERS_MOCK[0]!,
     },
   ]
 
   let currentId = 1
 
-  const randomUser = USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)]
+  const randomUser = USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)]!
 
   const now = new Date()
   const startRange = new Date(now)
@@ -139,12 +139,12 @@ const mockGenerator = (numberOfEvents: number): IEvent[] => {
   const endRange = new Date(now)
   endRange.setDate(now.getDate() + 30)
 
-  const currentEvent = {
+  const currentEvent: IEvent = {
     id: currentId++,
     startDate: new Date(now.getTime() - 30 * 60000).toISOString(),
     endDate: new Date(now.getTime() + 30 * 60000).toISOString(),
-    title: EVENTS[Math.floor(Math.random() * EVENTS.length)],
-    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    title: EVENTS[Math.floor(Math.random() * EVENTS.length)]!,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)]!,
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     user: randomUser,
   }
@@ -198,10 +198,10 @@ const mockGenerator = (numberOfEvents: number): IEvent[] => {
       id: currentId++,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
-      title: EVENTS[Math.floor(Math.random() * EVENTS.length)],
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      title: EVENTS[Math.floor(Math.random() * EVENTS.length)]!,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)]!,
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-      user: USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)],
+      user: USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)]!,
     })
 
     i++

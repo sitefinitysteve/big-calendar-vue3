@@ -71,7 +71,7 @@ const eventRows = computed(() => {
       rows.push([])
     }
 
-    rows[rowIndex].push(event)
+    rows[rowIndex]!.push(event)
   })
 
   return rows

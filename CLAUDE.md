@@ -94,14 +94,23 @@ src/
 - Custom utility `bg-calendar-disabled-hour` for working hours pattern
 
 ### State Management
-- Pinia setup store syntax (not options syntax)
+- Pinia setup store syntax (not options syntax), store ID: `'big-calendar'`
 - Store holds: selectedDate, selectedUserId, badgeVariant, users, events, workingHours, visibleHours
+- Store actions: `initialize()`, `addEvent()`, `updateEvent()`, `deleteEvent()`, `setSelectedDate()`
 - Composables derive filtered/computed data from store — views don't access store directly for complex logic
+- CalendarContainer (BigCalendar) emits `@event-created`, `@event-updated`, `@event-deleted` for backend hooks
 
 ### Routing
-- Routes: `/month-view`, `/week-view`, `/day-view`, `/year-view`, `/agenda-view`
-- Default redirect: `/` → `/month-view`
-- All routes are children of CalendarLayout
+- CalendarHeader emits `changeView` instead of using RouterLink — router-agnostic
+- CalendarContainer supports `v-model:view` for view switching
+- Demo app routes: `/month-view`, `/week-view`, `/day-view`, `/year-view`, `/agenda-view`
+- Page components handle `@update:view` with `router.push()`
+
+### Library Build
+- Entry point: `src/index.ts` — exports BigCalendar, views, store, composables, types, helpers
+- CSS entry: `src/calendar-lib.css` — Tailwind + CSS variable defaults in `@layer big-calendar-base`
+- Vite lib config: `vite.config.lib.ts` — ESM output, externalizes peer deps, bundles shadcn-vue components
+- Build command: `npm run build:lib` → `dist/big-calendar-vue3.js`, `dist/style.css`, `dist/index.d.ts`
 
 ## React → Vue Conversion Patterns
 
@@ -109,7 +118,7 @@ When porting React components, reference the original at https://github.com/lram
 - `useState` → `ref()`
 - `useMemo` → `computed()`
 - `useEffect` → `watch()` / `watchEffect()` / `onMounted()`
-- `useRouter().push` → `router.push()` or `<RouterLink>`
+- `useRouter().push` → `router.push()`
 - `.map()` in JSX → `v-for` in template
 - `className` → `class`
 - `onClick` → `@click`
