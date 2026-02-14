@@ -1,5 +1,7 @@
+<script setup lang="ts">
+import CalendarContainer from '@/calendar/components/CalendarContainer.vue'
+</script>
+
 <template>
-  <div class="rounded-xl border p-8 text-center text-muted-foreground">
-    Day View (placeholder)
-  </div>
+  <CalendarContainer view="day" />
 </template>

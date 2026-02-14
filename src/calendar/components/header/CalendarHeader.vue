@@ -12,6 +12,10 @@ defineProps<{
   events: IEvent[]
 }>()
 
+const emit = defineEmits<{
+  addEvent: []
+}>()
+
 const viewButtons = [
   { view: 'day' as const, to: '/day-view', label: 'View by day', icon: List, roundedClass: 'rounded-r-none' },
   { view: 'week' as const, to: '/week-view', label: 'View by week', icon: Columns, roundedClass: '-ml-px rounded-none' },
@@ -50,8 +54,7 @@ const viewButtons = [
         <UserSelect />
       </div>
 
-      <!-- AddEventDialog will be added in Task 9 -->
-      <Button class="w-full sm:w-auto">
+      <Button class="w-full sm:w-auto" @click="emit('addEvent')">
         <Plus />
         Add Event
       </Button>
