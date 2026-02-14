@@ -158,6 +158,21 @@ Copy `src/calendar/` and `src/stores/calendar.ts` into your project. See the `sr
 
 All CRUD events fire **after** the local store is updated, so the UI reflects the change immediately. Use these hooks to persist changes to your backend.
 
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `v-model:view` | `TCalendarView` | — | Current calendar view |
+| `canAdd` | `boolean` | `true` | Show/hide "Add Event" button and time slot click-to-create |
+| `canEdit` | `boolean` | `true` | Show/hide Edit button in event details dialog |
+| `canDelete` | `boolean` | `true` | Show/hide Delete button in event details dialog |
+
+Read-only example (all CRUD disabled):
+
+```vue
+<BigCalendar v-model:view="view" :can-add="false" :can-edit="false" :can-delete="false" />
+```
+
 ## Customization
 
 - **Theming**: The library ships with default CSS variables (zinc palette). Override them in your own CSS — the defaults are in a low-priority `@layer big-calendar-base`.
