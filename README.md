@@ -13,12 +13,6 @@ A fully-featured calendar component for Vue 3, ported from [lramos33/big-calenda
   <a href="https://www.buymeacoffee.com/lramos33" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Leonardo A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 </p>
 
-## Origin & Attribution
-
-This project is a Vue 3 port of the original [Big Calendar](https://github.com/lramos33/big-calendar) by [Leonardo Ramos](https://github.com/lramos33), licensed under MIT. The original was built with React 18, Next.js 14, and shadcn/ui. All credit for the original design, layout, and UX goes to Leonardo.
-
-The Vue 3 port was created by [Steve McNiven-Scott](https://www.sitefinitysteve.com) with the assistance of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Opus 4.6) for the React-to-Vue migration. The port preserves the original's design, layout, and functionality while rewriting all components using Vue 3 idioms (Composition API, Pinia, Vue Router, VeeValidate).
-
 ## Features
 
 - 5 calendar views: Month, Week, Day, Year, Agenda
@@ -169,6 +163,12 @@ All CRUD events fire **after** the local store is updated, so the UI reflects th
 - **Theming**: The library ships with default CSS variables (zinc palette). Override them in your own CSS — the defaults are in a low-priority `@layer big-calendar-base`.
 - **Events**: Replace `store.initialize()` call with your own API data.
 - **State**: Access `useCalendarStore()` to read/write calendar state (selectedDate, badgeVariant, workingHours, etc.).
+
+## Origin & Attribution
+
+This project is a Vue 3 port of the original [Big Calendar](https://github.com/lramos33/big-calendar) by [Leonardo Ramos](https://github.com/lramos33), licensed under MIT. The original was built with React 18, Next.js 14, and shadcn/ui. All credit for the original design, layout, and UX goes to Leonardo.
+
+The Vue 3 port was created by [Steve McNiven-Scott](https://www.sitefinitysteve.com) with the assistance of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Opus 4.6) for the React-to-Vue migration. The port preserves the original's design, layout, and functionality while rewriting all components using Vue 3 idioms (Composition API, Pinia, Vue Router, VeeValidate).
 
 ## License
 
