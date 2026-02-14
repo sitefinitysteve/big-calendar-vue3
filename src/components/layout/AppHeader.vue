@@ -29,11 +29,11 @@ import ToggleTheme from '@/components/layout/ToggleTheme.vue'
 
       <div class="hidden items-center gap-4 md:flex">
         <a
-          href="https://github.com/lramos33/big-calendar"
+          href="https://github.com/nicksitefinitysteve/big-calendar-vue3"
           target="_blank"
           class="inline-flex gap-0.5 text-sm hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
-          View original on GitHub
+          View on GitHub
           <ArrowUpRight :size="14" class="text-foreground" />
         </a>
 
