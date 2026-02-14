@@ -10,6 +10,7 @@ import type { TCalendarView } from '@/calendar/types'
 defineProps<{
   view: TCalendarView
   events: IEvent[]
+  canAdd?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -52,7 +53,7 @@ const viewButtons = [
         <UserSelect />
       </div>
 
-      <Button class="w-full sm:w-auto" @click="emit('addEvent')">
+      <Button v-if="canAdd !== false" class="w-full sm:w-auto" @click="emit('addEvent')">
         <Plus />
         Add Event
       </Button>

@@ -25,6 +25,7 @@ import type { IEvent } from '@/calendar/interfaces'
 const props = defineProps<{
   singleDayEvents: IEvent[]
   multiDayEvents: IEvent[]
+  canAdd?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -175,25 +176,29 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
                 />
 
                 <!-- 4 time slots per hour (15-minute intervals) -->
-                <div
-                  class="absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="handleTimeSlotClick(day, hour, 0)"
-                />
-                <div
-                  class="absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="handleTimeSlotClick(day, hour, 15)"
-                />
+                <template v-if="canAdd !== false">
+                  <div
+                    class="absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="handleTimeSlotClick(day, hour, 0)"
+                  />
+                  <div
+                    class="absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="handleTimeSlotClick(day, hour, 15)"
+                  />
+                </template>
 
                 <div class="pointer-events-none absolute inset-x-0 top-1/2 border-b border-dashed" />
 
-                <div
-                  class="absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="handleTimeSlotClick(day, hour, 30)"
-                />
-                <div
-                  class="absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="handleTimeSlotClick(day, hour, 45)"
-                />
+                <template v-if="canAdd !== false">
+                  <div
+                    class="absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="handleTimeSlotClick(day, hour, 30)"
+                  />
+                  <div
+                    class="absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="handleTimeSlotClick(day, hour, 45)"
+                  />
+                </template>
               </div>
 
               <!-- Positioned event blocks -->

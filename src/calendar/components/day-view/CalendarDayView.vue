@@ -27,6 +27,7 @@ import type { IEvent } from '@/calendar/interfaces'
 const props = defineProps<{
   singleDayEvents: IEvent[]
   multiDayEvents: IEvent[]
+  canAdd?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -160,25 +161,29 @@ function getEventStyle(event: IEvent, groupIndex: number) {
                 />
 
                 <!-- 4 clickable time slots per hour -->
-                <div
-                  class="absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="emit('addEvent', selectedDate, { hour, minute: 0 })"
-                />
-                <div
-                  class="absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="emit('addEvent', selectedDate, { hour, minute: 15 })"
-                />
+                <template v-if="canAdd !== false">
+                  <div
+                    class="absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="emit('addEvent', selectedDate, { hour, minute: 0 })"
+                  />
+                  <div
+                    class="absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="emit('addEvent', selectedDate, { hour, minute: 15 })"
+                  />
+                </template>
 
                 <div class="pointer-events-none absolute inset-x-0 top-1/2 border-b border-dashed" />
 
-                <div
-                  class="absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="emit('addEvent', selectedDate, { hour, minute: 30 })"
-                />
-                <div
-                  class="absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
-                  @click="emit('addEvent', selectedDate, { hour, minute: 45 })"
-                />
+                <template v-if="canAdd !== false">
+                  <div
+                    class="absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="emit('addEvent', selectedDate, { hour, minute: 30 })"
+                  />
+                  <div
+                    class="absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    @click="emit('addEvent', selectedDate, { hour, minute: 45 })"
+                  />
+                </template>
               </div>
 
               <!-- Positioned event blocks -->

@@ -14,6 +14,8 @@ import type { IEvent } from '@/calendar/interfaces'
 const props = defineProps<{
   event: IEvent
   open: boolean
+  canEdit?: boolean
+  canDelete?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -67,11 +69,11 @@ const endDate = parseISO(props.event.endDate)
         </div>
       </div>
 
-      <DialogFooter class="flex-row gap-2 sm:justify-between">
-        <Button type="button" variant="destructive" @click="emit('delete', event)">
+      <DialogFooter v-if="canDelete !== false || canEdit !== false" class="flex-row gap-2 sm:justify-between">
+        <Button v-if="canDelete !== false" type="button" variant="destructive" @click="emit('delete', event)">
           Delete
         </Button>
-        <Button type="button" variant="outline" @click="emit('edit', event)">
+        <Button v-if="canEdit !== false" type="button" variant="outline" @click="emit('edit', event)">
           Edit
         </Button>
       </DialogFooter>

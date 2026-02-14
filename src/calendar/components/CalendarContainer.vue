@@ -14,7 +14,16 @@ import EventDetailsDialog from '@/calendar/components/dialogs/EventDetailsDialog
 import EditEventDialog from '@/calendar/components/dialogs/EditEventDialog.vue'
 import AddEventDialog from '@/calendar/components/dialogs/AddEventDialog.vue'
 
-const props = defineProps<{ view: TCalendarView }>()
+const props = withDefaults(defineProps<{
+  view: TCalendarView
+  canAdd?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
+}>(), {
+  canAdd: true,
+  canEdit: true,
+  canDelete: true,
+})
 
 const emit = defineEmits<{
   'update:view': [view: TCalendarView]
@@ -75,7 +84,7 @@ function handleEventUpdated(event: IEvent) {
 
 <template>
   <div class="overflow-hidden rounded-xl border">
-    <CalendarHeader :view="view" :events="filteredEvents" @add-event="handleAddEvent()" @change-view="handleChangeView" />
+    <CalendarHeader :view="view" :events="filteredEvents" :can-add="canAdd" @add-event="handleAddEvent()" @change-view="handleChangeView" />
 
     <CalendarMonthView
       v-if="view === 'month'"
@@ -89,6 +98,7 @@ function handleEventUpdated(event: IEvent) {
       v-else-if="view === 'week'"
       :single-day-events="singleDayEvents"
       :multi-day-events="multiDayEvents"
+      :can-add="canAdd"
       @open-details="handleOpenDetails"
       @add-event="handleAddEvent"
     />
@@ -97,6 +107,7 @@ function handleEventUpdated(event: IEvent) {
       v-else-if="view === 'day'"
       :single-day-events="singleDayEvents"
       :multi-day-events="multiDayEvents"
+      :can-add="canAdd"
       @open-details="handleOpenDetails"
       @add-event="handleAddEvent"
     />
@@ -121,13 +132,15 @@ function handleEventUpdated(event: IEvent) {
     v-if="selectedEvent"
     :event="selectedEvent"
     :open="detailsOpen"
+    :can-edit="canEdit"
+    :can-delete="canDelete"
     @update:open="detailsOpen = $event"
     @edit="handleEdit"
     @delete="handleDelete"
   />
 
   <EditEventDialog
-    v-if="selectedEvent"
+    v-if="selectedEvent && canEdit"
     :key="selectedEvent.id"
     :event="selectedEvent"
     :open="editOpen"
@@ -136,6 +149,7 @@ function handleEventUpdated(event: IEvent) {
   />
 
   <AddEventDialog
+    v-if="canAdd"
     :open="addOpen"
     :start-date="addEventStartDate"
     :start-time="addEventStartTime"
