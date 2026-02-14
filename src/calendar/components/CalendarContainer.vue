@@ -5,6 +5,10 @@ import type { IEvent } from '@/calendar/interfaces'
 import { useFilteredEvents } from '@/calendar/composables/useFilteredEvents'
 import CalendarHeader from '@/calendar/components/header/CalendarHeader.vue'
 import CalendarMonthView from '@/calendar/components/month-view/CalendarMonthView.vue'
+import CalendarWeekView from '@/calendar/components/week-view/CalendarWeekView.vue'
+import CalendarDayView from '@/calendar/components/day-view/CalendarDayView.vue'
+import CalendarYearView from '@/calendar/components/year-view/CalendarYearView.vue'
+import CalendarAgendaView from '@/calendar/components/agenda-view/CalendarAgendaView.vue'
 import EventDetailsDialog from '@/calendar/components/dialogs/EventDetailsDialog.vue'
 import EditEventDialog from '@/calendar/components/dialogs/EditEventDialog.vue'
 import AddEventDialog from '@/calendar/components/dialogs/AddEventDialog.vue'
@@ -52,25 +56,33 @@ function handleAddEvent(startDate?: Date, startTime?: { hour: number; minute: nu
       @open-details="handleOpenDetails"
     />
 
-    <!-- Week view (Task 10) -->
-    <div v-else-if="view === 'week'" class="p-8 text-center text-muted-foreground">
-      Week View (coming soon)
-    </div>
+    <CalendarWeekView
+      v-else-if="view === 'week'"
+      :single-day-events="singleDayEvents"
+      :multi-day-events="multiDayEvents"
+      @open-details="handleOpenDetails"
+      @add-event="handleAddEvent"
+    />
 
-    <!-- Day view (Task 11) -->
-    <div v-else-if="view === 'day'" class="p-8 text-center text-muted-foreground">
-      Day View (coming soon)
-    </div>
+    <CalendarDayView
+      v-else-if="view === 'day'"
+      :single-day-events="singleDayEvents"
+      :multi-day-events="multiDayEvents"
+      @open-details="handleOpenDetails"
+      @add-event="handleAddEvent"
+    />
 
-    <!-- Year view (Task 12) -->
-    <div v-else-if="view === 'year'" class="p-8 text-center text-muted-foreground">
-      Year View (coming soon)
-    </div>
+    <CalendarYearView
+      v-else-if="view === 'year'"
+      :all-events="filteredEvents"
+    />
 
-    <!-- Agenda view (Task 13) -->
-    <div v-else-if="view === 'agenda'" class="p-8 text-center text-muted-foreground">
-      Agenda View (coming soon)
-    </div>
+    <CalendarAgendaView
+      v-else-if="view === 'agenda'"
+      :single-day-events="singleDayEvents"
+      :multi-day-events="multiDayEvents"
+      @open-details="handleOpenDetails"
+    />
   </div>
 
   <!-- Dialogs rendered outside the calendar border -->

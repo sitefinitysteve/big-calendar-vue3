@@ -2,6 +2,13 @@
 
 Vue 3 port of [lramos33/big-calendar](https://github.com/lramos33/big-calendar) (React/Next.js). A clone-and-customize calendar component with 5 views, event CRUD, user filtering, and dark mode.
 
+## Source Project
+
+- **Original**: https://github.com/lramos33/big-calendar by Leonardo Ramos (MIT License)
+- **Original stack**: React 18, Next.js 14, shadcn/ui, react-dnd, date-fns
+- **Feature parity**: Targets parity as of February 14, 2026. This port may diverge to add new features or leverage Vue-specific patterns beyond the original scope.
+- **React source**: Available at `/Users/steve/Apps/big-calendar-vue/` for reference during porting
+
 ## Commands
 
 ```bash
@@ -30,13 +37,13 @@ src/
 ├── calendar/                    # Core calendar domain
 │   ├── components/              # Calendar-specific Vue components
 │   │   ├── header/              # CalendarHeader, DateNavigator, TodayButton, UserSelect
-│   │   ├── month-view/          # (Task 8)
-│   │   ├── week-view/           # (Task 10)
-│   │   ├── day-view/            # (Task 11)
-│   │   ├── year-view/           # (Task 12)
-│   │   ├── agenda-view/         # (Task 13)
-│   │   ├── dialogs/             # (Task 9)
-│   │   └── settings/            # (Task 14)
+│   │   ├── month-view/          # CalendarMonthView, DayCell, MonthEventBadge, EventBullet
+│   │   ├── week-view/           # CalendarWeekView, EventBlock, CalendarTimeline, MultiDayRow
+│   │   ├── day-view/            # CalendarDayView, DayViewMultiDayEventsRow
+│   │   ├── year-view/           # CalendarYearView, YearViewMonth, YearViewDayCell
+│   │   ├── agenda-view/         # CalendarAgendaView, AgendaDayGroup, AgendaEventCard
+│   │   ├── dialogs/             # EventDetailsDialog, EditEventDialog, AddEventDialog
+│   │   └── settings/            # BadgeVariant, VisibleHours, WorkingHours inputs
 │   ├── composables/             # Vue composables for calendar logic
 │   ├── types.ts                 # Type aliases (TCalendarView, TEventColor, etc.)
 │   ├── interfaces.ts            # Interfaces (IEvent, IUser, ICalendarCell)
@@ -96,13 +103,9 @@ src/
 - Default redirect: `/` → `/month-view`
 - All routes are children of CalendarLayout
 
-## Implementation Plan
+## React → Vue Conversion Patterns
 
-Full plan at `docs/plans/2026-02-13-implementation-plan.md`. Tasks 1-6 are complete. Next: Task 7 (CalendarContainer).
-
-## Original Project Reference
-
-When porting React components, reference the original at https://github.com/lramos33/big-calendar. Key conversion patterns:
+When porting React components, reference the original at https://github.com/lramos33/big-calendar:
 - `useState` → `ref()`
 - `useMemo` → `computed()`
 - `useEffect` → `watch()` / `watchEffect()` / `onMounted()`
