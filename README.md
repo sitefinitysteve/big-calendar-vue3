@@ -6,9 +6,9 @@ This is a **clone-and-customize** project — copy the calendar components into 
 
 ## Origin & Attribution
 
-This project is a Vue 3 port of the original [Big Calendar](https://github.com/lramos33/big-calendar) by [Leonardo Ramos](https://github.com/lramos33), licensed under MIT. The original was built with React 18, Next.js 14, and shadcn/ui.
+This project is a Vue 3 port of the original [Big Calendar](https://github.com/lramos33/big-calendar) by [Leonardo Ramos](https://github.com/lramos33), licensed under MIT. The original was built with React 18, Next.js 14, and shadcn/ui. All credit for the original design, layout, and UX goes to Leonardo.
 
-The Vue port preserves the original's design, layout, and functionality while rewriting all components using Vue 3 idioms (Composition API, Pinia, Vue Router, VeeValidate).
+The Vue 3 port was created by [Steve McNiven-Scott](https://www.sitefinitysteve.com) with the assistance of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Opus 4.6) for the React-to-Vue migration. The port preserves the original's design, layout, and functionality while rewriting all components using Vue 3 idioms (Composition API, Pinia, Vue Router, VeeValidate).
 
 ### Feature Parity (as of February 14, 2026)
 
@@ -113,4 +113,8 @@ This project follows the shadcn-vue philosophy — you own the code. To customiz
 
 ## License
 
-MIT — See [LICENSE](LICENSE) for details. Original work by Leonardo Ramos, Vue 3 port by Steve McNiven-Scott.
+MIT — See [LICENSE](LICENSE) for details. Original work by [Leonardo Ramos](https://github.com/lramos33), Vue 3 port by [Steve McNiven-Scott](https://www.sitefinitysteve.com).
+
+---
+
+Made with :heart: by [sitefinitysteve](https://www.sitefinitysteve.com)
