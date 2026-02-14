@@ -1,0 +1,65 @@
+<script setup lang="ts">
+import { useCalendarStore } from '@/stores/calendar'
+import { AvatarGroup } from '@/components/ui/avatar-group'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const store = useCalendarStore()
+
+function handleValueChange(value: string) {
+  store.selectedUserId = value
+}
+</script>
+
+<template>
+  <Select :model-value="store.selectedUserId" @update:model-value="handleValueChange">
+    <SelectTrigger class="flex-1 md:w-48">
+      <SelectValue />
+    </SelectTrigger>
+
+    <SelectContent align="end">
+      <SelectItem value="all">
+        <div class="flex items-center gap-1">
+          <AvatarGroup :max="2" :count="store.users.length">
+            <Avatar
+              v-for="user in store.users.slice(0, 2)"
+              :key="user.id"
+              class="size-6 text-xxs"
+            >
+              <AvatarImage :src="user.picturePath ?? undefined" :alt="user.name" />
+              <AvatarFallback class="text-xxs">
+                {{ user.name[0] }}
+              </AvatarFallback>
+            </Avatar>
+          </AvatarGroup>
+          All
+        </div>
+      </SelectItem>
+
+      <SelectItem
+        v-for="user in store.users"
+        :key="user.id"
+        :value="user.id"
+        class="flex-1"
+      >
+        <div class="flex items-center gap-2">
+          <Avatar class="size-6">
+            <AvatarImage :src="user.picturePath ?? undefined" :alt="user.name" />
+            <AvatarFallback class="text-xxs">
+              {{ user.name[0] }}
+            </AvatarFallback>
+          </Avatar>
+          <p class="truncate">
+            {{ user.name }}
+          </p>
+        </div>
+      </SelectItem>
+    </SelectContent>
+  </Select>
+</template>
