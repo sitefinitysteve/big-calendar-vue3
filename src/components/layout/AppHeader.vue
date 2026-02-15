@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Calendar, ArrowUpRight } from 'lucide-vue-next'
+import ToggleLanguage from '@/components/layout/ToggleLanguage.vue'
 import ToggleTheme from '@/components/layout/ToggleTheme.vue'
 </script>
 
@@ -37,6 +38,7 @@ import ToggleTheme from '@/components/layout/ToggleTheme.vue'
           <ArrowUpRight :size="14" class="text-foreground" />
         </a>
 
+        <ToggleLanguage />
         <ToggleTheme />
       </div>
     </div>

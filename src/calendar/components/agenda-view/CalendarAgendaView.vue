@@ -13,6 +13,9 @@ import { useCalendarStore } from '@/stores/calendar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { IEvent } from '@/calendar/interfaces'
 import AgendaDayGroup from '@/calendar/components/agenda-view/AgendaDayGroup.vue'
+import { useCalendarLabels } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -92,7 +95,7 @@ const hasEvents = computed(() => eventsByDay.value.length > 0)
 
     <div v-else class="flex h-[800px] flex-col items-center justify-center gap-4 text-muted-foreground">
       <CalendarX2 class="size-16 stroke-1" />
-      <p class="text-lg">No events scheduled for the selected month</p>
+      <p class="text-lg">{{ labels.noEventsMonth }}</p>
     </div>
   </ScrollArea>
 </template>

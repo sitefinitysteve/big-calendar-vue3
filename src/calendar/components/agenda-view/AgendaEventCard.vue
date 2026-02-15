@@ -5,6 +5,9 @@ import { Clock, Text, User } from 'lucide-vue-next'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
 
 const props = defineProps<{
   event: IEvent
@@ -80,7 +83,7 @@ function handleKeyDown(e: KeyboardEvent) {
       <div class="flex flex-col gap-1 truncate">
         <p class="truncate font-semibold">
           <span v-if="eventCurrentDay && eventTotalDays" class="text-xs">
-            Day {{ eventCurrentDay }} of {{ eventTotalDays }} &bull;&nbsp;
+            {{ labels.dayOfTotal(eventCurrentDay, eventTotalDays) }} &bull;&nbsp;
           </span>
           {{ event.title }}
         </p>
@@ -93,7 +96,7 @@ function handleKeyDown(e: KeyboardEvent) {
 
           <span class="flex items-center gap-1">
             <Clock class="size-3" />
-            <template v-if="event.isAllDay">All day</template>
+            <template v-if="event.isAllDay">{{ labels.allDay }}</template>
             <template v-else>
               {{ format(parseISO(event.startDate), 'h:mm a') }} - {{ format(parseISO(event.endDate), 'h:mm a') }}
             </template>

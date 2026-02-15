@@ -26,6 +26,7 @@ A fully-featured calendar component for Vue 3, ported from [lramos33/big-calenda
 - Dark mode with localStorage persistence
 - Live current-time indicator in week/day views
 - Multi-day event spanning across cells
+- i18n — all user-facing text customizable via labels prop, with date-fns locale support
 - Responsive design (mobile fallbacks for complex views)
 
 **Intentionally deferred from v1:** Drag-and-drop (the original uses react-dnd). This may be added in a future version.
@@ -170,6 +171,9 @@ All CRUD events fire **after** the local store is updated, so the UI reflects th
 | `canDelete` | `boolean` | `true` | Show/hide Delete button in event details dialog |
 | `availableViews` | `TCalendarView[]` | All 5 views | Restrict which view buttons appear in the header |
 | `showUserSelect` | `boolean` | `true` | Show/hide the user/resource filter dropdown |
+| `labels` | `Partial<ICalendarLabels>` | `{}` | Override any user-facing text (see [Multilingual Labels](#multilingual-labels)) |
+| `showViewTooltips` | `boolean` | `true` | Show/hide tooltips on view toggle buttons |
+| `dateLocale` | `Locale` (date-fns) | `undefined` | date-fns locale for month/day name formatting |
 
 Read-only example (all CRUD disabled):
 
@@ -185,6 +189,112 @@ Show only month and week views, no user filter:
   :available-views="['month', 'week']"
   :show-user-select="false"
 />
+
+## Multilingual Labels
+
+All user-facing text in the calendar is customizable via the `labels` prop. English is the default — override only the labels you need.
+
+### Basic Usage
+
+```vue
+<BigCalendar v-model:view="view" :labels="frenchLabels" :date-locale="frLocale" />
+```
+
+```typescript
+import type { ICalendarLabels } from 'big-calendar-vue3'
+import { fr } from 'date-fns/locale/fr'
+
+const frLocale = fr
+
+const frenchLabels: Partial<ICalendarLabels> = {
+  addEvent: 'Ajouter un événement',
+  allDay: 'Toute la journée',
+  viewDay: 'Jour',
+  viewWeek: 'Semaine',
+  viewMonth: 'Mois',
+  viewYear: 'Année',
+  viewAgenda: 'Agenda',
+  buttonCancel: 'Annuler',
+  buttonCreate: 'Créer',
+  buttonSave: 'Enregistrer',
+  buttonEdit: 'Modifier',
+  buttonDelete: 'Supprimer',
+  // ... override as many or as few as needed
+}
+```
+
+### Dynamic Language Switching
+
+Use a reactive ref to switch languages at runtime:
+
+```vue
+<script setup>
+import { ref, computed } from 'vue'
+import type { ICalendarLabels } from 'big-calendar-vue3'
+import { fr } from 'date-fns/locale/fr'
+import { es } from 'date-fns/locale/es'
+
+const locale = ref('en')
+
+const labelSets = {
+  en: {},
+  fr: { addEvent: 'Ajouter', allDay: 'Toute la journée', /* ... */ },
+  es: { addEvent: 'Agregar evento', allDay: 'Todo el día', /* ... */ },
+}
+
+const dateLocales = { en: undefined, fr, es }
+
+const labels = computed(() => labelSets[locale.value])
+const dateLocale = computed(() => dateLocales[locale.value])
+</script>
+
+<template>
+  <BigCalendar v-model:view="view" :labels="labels" :date-locale="dateLocale" />
+</template>
+```
+
+### Interpolated Labels
+
+Some labels are functions to handle dynamic values:
+
+```typescript
+const labels: Partial<ICalendarLabels> = {
+  eventsCount: (n) => `${n} événements`,
+  moreEvents: (n) => `${n} de plus...`,
+  dayOfTotal: (d, t) => `Jour ${d} sur ${t}`,
+}
+```
+
+### Accessing Default Labels
+
+```typescript
+import { DEFAULT_LABELS } from 'big-calendar-vue3'
+
+console.log(DEFAULT_LABELS) // all ~80 keys with English defaults
+```
+
+> See `ICalendarLabels` in `src/calendar/labels.ts` for the complete list of all label keys.
+
+### View Button Tooltips
+
+View buttons display tooltips on hover by default. Disable with the `showViewTooltips` prop:
+
+```vue
+<BigCalendar v-model:view="view" :show-view-tooltips="false" />
+```
+
+Tooltip text is customizable via labels (`viewDayTooltip`, `viewWeekTooltip`, etc.).
+
+### View Button CSS Hooks
+
+Each view button has a `data-view` attribute and CSS class for external styling:
+
+```css
+.bc-view-day { /* ... */ }
+.bc-view-week { /* ... */ }
+button[data-view="month"] { /* ... */ }
+.bc-view-buttons button { /* ... */ }
+```
 
 ## Customization
 

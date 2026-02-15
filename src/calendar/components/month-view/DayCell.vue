@@ -7,6 +7,9 @@ import MonthEventBadge from '@/calendar/components/month-view/MonthEventBadge.vu
 import { cn } from '@/lib/utils'
 import { getMonthCellEvents } from '@/calendar/helpers'
 import type { ICalendarCell, IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
 
 const props = defineProps<{
   cell: ICalendarCell
@@ -70,7 +73,7 @@ function handleClick() {
       :class="cn('h-4.5 px-1.5 text-xs font-semibold text-muted-foreground', !cell.currentMonth && 'opacity-50')"
     >
       <span class="sm:hidden">+{{ cellEvents.length - MAX_VISIBLE_EVENTS }}</span>
-      <span class="hidden sm:inline"> {{ cellEvents.length - MAX_VISIBLE_EVENTS }} more...</span>
+      <span class="hidden sm:inline"> {{ labels.moreEvents(cellEvents.length - MAX_VISIBLE_EVENTS) }}</span>
     </p>
   </div>
 </template>

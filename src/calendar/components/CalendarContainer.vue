@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import type { TCalendarView } from '@/calendar/types'
 import type { IEvent } from '@/calendar/interfaces'
+import type { Locale } from 'date-fns'
+import type { ICalendarLabels } from '@/calendar/labels'
+import { DEFAULT_LABELS, CALENDAR_LABELS_KEY, CALENDAR_FLAGS_KEY, CALENDAR_DATE_LOCALE_KEY } from '@/calendar/labels'
 import { useCalendarStore } from '@/stores/calendar'
 import { useFilteredEvents } from '@/calendar/composables/useFilteredEvents'
 import CalendarHeader from '@/calendar/components/header/CalendarHeader.vue'
@@ -21,12 +24,17 @@ const props = withDefaults(defineProps<{
   canDelete?: boolean
   availableViews?: TCalendarView[]
   showUserSelect?: boolean
+  labels?: Partial<ICalendarLabels>
+  showViewTooltips?: boolean
+  dateLocale?: Locale
 }>(), {
   canAdd: true,
   canEdit: true,
   canDelete: true,
   availableViews: () => ['day', 'week', 'month', 'year', 'agenda'],
   showUserSelect: true,
+  labels: () => ({}),
+  showViewTooltips: true,
 })
 
 const emit = defineEmits<{
@@ -37,6 +45,12 @@ const emit = defineEmits<{
 }>()
 
 const store = useCalendarStore()
+
+const mergedLabels = computed(() => ({ ...DEFAULT_LABELS, ...props.labels }))
+provide(CALENDAR_LABELS_KEY, mergedLabels)
+provide(CALENDAR_FLAGS_KEY, { showViewTooltips: computed(() => props.showViewTooltips) })
+provide(CALENDAR_DATE_LOCALE_KEY, computed(() => props.dateLocale))
+
 const viewRef = computed(() => props.view)
 
 function handleChangeView(view: TCalendarView) {

@@ -9,13 +9,15 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
+import { useCalendarLabels } from '@/calendar/labels'
 
 const store = useCalendarStore()
+const labels = useCalendarLabels()
 
 const triggerLabel = computed(() => {
-  if (store.selectedUserId === 'all') return 'All'
+  if (store.selectedUserId === 'all') return labels.value.userAll
   const user = store.users.find(u => u.id === store.selectedUserId)
-  return user?.name ?? 'Select user'
+  return user?.name ?? labels.value.userSelectPlaceholder
 })
 
 function handleValueChange(value: string | number | bigint | Record<string, any> | null) {
@@ -44,7 +46,7 @@ function handleValueChange(value: string | number | bigint | Record<string, any>
               </AvatarFallback>
             </Avatar>
           </AvatarGroup>
-          All
+          {{ labels.userAll }}
         </div>
       </SelectItem>
 

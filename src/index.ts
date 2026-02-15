@@ -41,8 +41,12 @@ export {
 export type { TCalendarView, TEventColor, TBadgeVariant, TWorkingHours, TVisibleHours } from '@/calendar/types'
 export type { IEvent, IUser, ICalendarCell } from '@/calendar/interfaces'
 
+// Labels
+export type { ICalendarLabels } from '@/calendar/labels'
+export { DEFAULT_LABELS, useCalendarLabels, useDateLocale } from '@/calendar/labels'
+
 // Schemas
-export { eventSchema, type TEventFormData } from '@/calendar/schemas'
+export { eventSchema, createEventSchema, type TEventFormData } from '@/calendar/schemas'
 
 // Mock data (for demos)
 export { USERS_MOCK, CALENDAR_ITEMS_MOCK } from '@/calendar/mocks'

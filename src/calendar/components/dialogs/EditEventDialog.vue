@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { computed, nextTick, ref, watch } from 'vue'
 import { parseISO } from 'date-fns'
 import { AlertTriangle } from 'lucide-vue-next'
-import { useForm, useFormValues } from 'vee-validate'
+import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useCalendarStore } from '@/stores/calendar'
 import { useUpdateEvent } from '@/calendar/composables/useUpdateEvent'
@@ -35,7 +36,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { eventSchema } from '@/calendar/schemas'
+import { createEventSchema } from '@/calendar/schemas'
+import { useCalendarLabels } from '@/calendar/labels'
 import type { IEvent } from '@/calendar/interfaces'
 
 const props = defineProps<{
@@ -50,27 +52,50 @@ const emit = defineEmits<{
 
 const store = useCalendarStore()
 const { updateEvent } = useUpdateEvent()
+const labels = useCalendarLabels()
 
-const startParsed = parseISO(props.event.startDate)
-const endParsed = parseISO(props.event.endDate)
-const isAllDay = props.event.isAllDay ?? false
+const schema = computed(() => createEventSchema(labels.value))
 
-const { handleSubmit } = useForm({
-  validationSchema: toTypedSchema(eventSchema),
-  initialValues: {
-    user: props.event.user.id,
-    title: props.event.title,
-    description: props.event.description,
-    isAllDay,
-    startDate: startParsed,
-    startTime: isAllDay ? undefined : { hour: startParsed.getHours(), minute: startParsed.getMinutes() },
-    endDate: endParsed,
-    endTime: isAllDay ? undefined : { hour: endParsed.getHours(), minute: endParsed.getMinutes() },
-    color: props.event.color,
-  },
+function buildFormValues(event: IEvent) {
+  const sp = parseISO(event.startDate)
+  const ep = parseISO(event.endDate)
+  const allDay = event.isAllDay ?? false
+  return {
+    user: event.user.id,
+    title: event.title,
+    description: event.description,
+    isAllDay: allDay,
+    startDate: sp,
+    startTime: allDay ? undefined : { hour: sp.getHours(), minute: sp.getMinutes() },
+    endDate: ep,
+    endTime: allDay ? undefined : { hour: ep.getHours(), minute: ep.getMinutes() },
+    color: event.color,
+  }
+}
+
+const initialValues = buildFormValues(props.event)
+
+const { handleSubmit, resetForm, setFieldValue, values: formValues } = useForm({
+  validationSchema: computed(() => toTypedSchema(schema.value)),
+  initialValues,
 })
 
-const formValues = useFormValues()
+const isAllDayActive = ref(props.event.isAllDay ?? false)
+
+// Preserve time values so they can be restored when toggling all-day off
+const savedStartTime = ref(initialValues.startTime ?? { hour: 9, minute: 0 })
+const savedEndTime = ref(initialValues.endTime ?? { hour: 10, minute: 0 })
+
+// Reset form with fresh event data each time the dialog opens
+watch(() => props.open, (isOpen) => {
+  if (isOpen) {
+    const values = buildFormValues(props.event)
+    resetForm({ values })
+    isAllDayActive.value = values.isAllDay
+    savedStartTime.value = values.startTime ?? { hour: 9, minute: 0 }
+    savedEndTime.value = values.endTime ?? { hour: 10, minute: 0 }
+  }
+})
 
 const onSubmit = handleSubmit(values => {
   const user = store.users.find(u => u.id === values.user)
@@ -103,36 +128,36 @@ const onSubmit = handleSubmit(values => {
   emit('update:open', false)
 })
 
-const EVENT_COLORS = [
-  { value: 'blue', label: 'Blue', bg: 'bg-blue-600' },
-  { value: 'green', label: 'Green', bg: 'bg-green-600' },
-  { value: 'red', label: 'Red', bg: 'bg-red-600' },
-  { value: 'yellow', label: 'Yellow', bg: 'bg-yellow-600' },
-  { value: 'purple', label: 'Purple', bg: 'bg-purple-600' },
-  { value: 'orange', label: 'Orange', bg: 'bg-orange-600' },
-  { value: 'gray', label: 'Gray', bg: 'bg-neutral-600' },
-] as const
+const EVENT_COLORS = computed(() => [
+  { value: 'blue', label: labels.value.colorBlue, bg: 'bg-blue-600' },
+  { value: 'green', label: labels.value.colorGreen, bg: 'bg-green-600' },
+  { value: 'red', label: labels.value.colorRed, bg: 'bg-red-600' },
+  { value: 'yellow', label: labels.value.colorYellow, bg: 'bg-yellow-600' },
+  { value: 'purple', label: labels.value.colorPurple, bg: 'bg-purple-600' },
+  { value: 'orange', label: labels.value.colorOrange, bg: 'bg-orange-600' },
+  { value: 'gray', label: labels.value.colorGray, bg: 'bg-neutral-600' },
+] as const)
 </script>
 
 <template>
   <Dialog :open="open" @update:open="emit('update:open', $event)">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Edit Event</DialogTitle>
+        <DialogTitle>{{ labels.dialogEditTitle }}</DialogTitle>
         <DialogDescription>
           <AlertTriangle class="mr-1 inline-block size-4 text-yellow-500" />
-          This form only updates the current event state locally for demonstration purposes. In a real application, you should submit this form to a backend API to persist the changes.
+          {{ labels.dialogEditDescription }}
         </DialogDescription>
       </DialogHeader>
 
       <form id="edit-event-form" class="grid gap-4 py-4" @submit="onSubmit">
         <FormField v-slot="{ componentField }" name="user">
           <FormItem>
-            <FormLabel>Responsible</FormLabel>
+            <FormLabel>{{ labels.fieldResponsible }}</FormLabel>
             <FormControl>
               <Select v-bind="componentField">
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an option" />
+                  <SelectValue :placeholder="labels.placeholderSelectOption" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem v-for="user in store.users" :key="user.id" :value="user.id">
@@ -153,9 +178,9 @@ const EVENT_COLORS = [
 
         <FormField v-slot="{ componentField }" name="title">
           <FormItem>
-            <FormLabel>Title</FormLabel>
+            <FormLabel>{{ labels.fieldTitle }}</FormLabel>
             <FormControl>
-              <Input placeholder="Enter a title" v-bind="componentField" />
+              <Input :placeholder="labels.placeholderTitle" v-bind="componentField" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -163,9 +188,25 @@ const EVENT_COLORS = [
 
         <FormField v-slot="{ value, handleChange }" name="isAllDay">
           <FormItem class="flex items-center justify-between">
-            <FormLabel>All day</FormLabel>
+            <FormLabel>{{ labels.allDay }}</FormLabel>
             <FormControl>
-              <Switch :checked="value" @update:checked="handleChange" />
+              <Switch
+                :model-value="value"
+                @update:model-value="(val: boolean) => {
+                  if (val && formValues.startTime?.hour != null) {
+                    savedStartTime = { hour: formValues.startTime.hour, minute: formValues.startTime.minute ?? 0 }
+                    savedEndTime = formValues.endTime?.hour != null ? { hour: formValues.endTime.hour, minute: formValues.endTime.minute ?? 0 } : savedEndTime
+                  }
+                  handleChange(val)
+                  isAllDayActive = val
+                  if (!val) {
+                    nextTick(() => {
+                      setFieldValue('startTime', savedStartTime)
+                      setFieldValue('endTime', savedEndTime)
+                    })
+                  }
+                }"
+              />
             </FormControl>
           </FormItem>
         </FormField>
@@ -173,11 +214,11 @@ const EVENT_COLORS = [
         <div class="flex items-start gap-2">
           <FormField v-slot="{ value, handleChange }" name="startDate">
             <FormItem class="flex-1">
-              <FormLabel>Start Date</FormLabel>
+              <FormLabel>{{ labels.fieldStartDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
                   :model-value="value"
-                  placeholder="Select a date"
+                  :placeholder="labels.placeholderSelectDate"
                   @update:model-value="handleChange"
                 />
               </FormControl>
@@ -185,9 +226,9 @@ const EVENT_COLORS = [
             </FormItem>
           </FormField>
 
-          <FormField v-if="!formValues.isAllDay" v-slot="{ value, handleChange }" name="startTime">
+          <FormField v-if="!isAllDayActive" v-slot="{ value, handleChange }" name="startTime">
             <FormItem class="flex-1">
-              <FormLabel>Start Time</FormLabel>
+              <FormLabel>{{ labels.fieldStartTime }}</FormLabel>
               <FormControl>
                 <TimeInput
                   :model-value="value"
@@ -203,11 +244,11 @@ const EVENT_COLORS = [
         <div class="flex items-start gap-2">
           <FormField v-slot="{ value, handleChange }" name="endDate">
             <FormItem class="flex-1">
-              <FormLabel>End Date</FormLabel>
+              <FormLabel>{{ labels.fieldEndDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
                   :model-value="value"
-                  placeholder="Select a date"
+                  :placeholder="labels.placeholderSelectDate"
                   @update:model-value="handleChange"
                 />
               </FormControl>
@@ -215,9 +256,9 @@ const EVENT_COLORS = [
             </FormItem>
           </FormField>
 
-          <FormField v-if="!formValues.isAllDay" v-slot="{ value, handleChange }" name="endTime">
+          <FormField v-if="!isAllDayActive" v-slot="{ value, handleChange }" name="endTime">
             <FormItem class="flex-1">
-              <FormLabel>End Time</FormLabel>
+              <FormLabel>{{ labels.fieldEndTime }}</FormLabel>
               <FormControl>
                 <TimeInput
                   :model-value="value"
@@ -232,11 +273,11 @@ const EVENT_COLORS = [
 
         <FormField v-slot="{ componentField }" name="color">
           <FormItem>
-            <FormLabel>Color</FormLabel>
+            <FormLabel>{{ labels.fieldColor }}</FormLabel>
             <FormControl>
               <Select v-bind="componentField">
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an option" />
+                  <SelectValue :placeholder="labels.placeholderSelectOption" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem v-for="c in EVENT_COLORS" :key="c.value" :value="c.value">
@@ -254,7 +295,7 @@ const EVENT_COLORS = [
 
         <FormField v-slot="{ componentField }" name="description">
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel>{{ labels.fieldDescription }}</FormLabel>
             <FormControl>
               <Textarea v-bind="componentField" />
             </FormControl>
@@ -265,9 +306,9 @@ const EVENT_COLORS = [
 
       <DialogFooter>
         <DialogClose as-child>
-          <Button type="button" variant="outline">Cancel</Button>
+          <Button type="button" variant="outline">{{ labels.buttonCancel }}</Button>
         </DialogClose>
-        <Button form="edit-event-form" type="submit">Save changes</Button>
+        <Button form="edit-event-form" type="submit">{{ labels.buttonSave }}</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

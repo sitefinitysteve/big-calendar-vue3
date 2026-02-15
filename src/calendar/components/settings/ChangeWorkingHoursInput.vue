@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import { Info, Moon } from 'lucide-vue-next'
 import { useCalendarStore } from '@/stores/calendar'
 import type { TWorkingHours } from '@/calendar/types'
@@ -12,18 +12,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useCalendarLabels } from '@/calendar/labels'
 
 const store = useCalendarStore()
+const labels = useCalendarLabels()
 
-const DAYS_OF_WEEK = [
-  { index: 0, name: 'Sunday' },
-  { index: 1, name: 'Monday' },
-  { index: 2, name: 'Tuesday' },
-  { index: 3, name: 'Wednesday' },
-  { index: 4, name: 'Thursday' },
-  { index: 5, name: 'Friday' },
-  { index: 6, name: 'Saturday' },
-] as const
+const DAYS_OF_WEEK = computed(() => [
+  { index: 0, name: labels.value.sunday },
+  { index: 1, name: labels.value.monday },
+  { index: 2, name: labels.value.tuesday },
+  { index: 3, name: labels.value.wednesday },
+  { index: 4, name: labels.value.thursday },
+  { index: 5, name: labels.value.friday },
+  { index: 6, name: labels.value.saturday },
+])
 
 const localHours = reactive<TWorkingHours>(
   Object.fromEntries(
@@ -67,14 +69,14 @@ function handleApply() {
 <template>
   <div class="space-y-3">
     <div class="flex items-center gap-2">
-      <label class="text-sm font-medium">Working Hours</label>
+      <label class="text-sm font-medium">{{ labels.settingsWorkingHours }}</label>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
             <Info class="size-4 text-muted-foreground" />
           </TooltipTrigger>
           <TooltipContent>
-            <p>Configure working hours for each day of the week.</p>
+            <p>{{ labels.workingHoursTooltip }}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -100,7 +102,7 @@ function handleApply() {
               :hour-cycle="12"
               @update:model-value="handleFromChange(day.index, $event)"
             />
-            <span class="text-sm text-muted-foreground">to</span>
+            <span class="text-sm text-muted-foreground">{{ labels.to.toLowerCase() }}</span>
             <TimeInput
               :model-value="{ hour: getHours(day.index).to, minute: 0 }"
               :hour-cycle="12"
@@ -112,14 +114,14 @@ function handleApply() {
         <template v-else>
           <div class="flex flex-1 items-center gap-2 text-sm text-muted-foreground">
             <Moon class="size-4" />
-            <span>Closed</span>
+            <span>{{ labels.closed }}</span>
           </div>
         </template>
       </div>
     </div>
 
     <Button size="sm" class="w-full" @click="handleApply">
-      Apply
+      {{ labels.apply }}
     </Button>
   </div>
 </template>

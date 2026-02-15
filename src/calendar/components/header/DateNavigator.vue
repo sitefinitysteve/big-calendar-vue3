@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { getEventsCount, navigateDate, rangeText } from '@/calendar/helpers'
 import type { IEvent } from '@/calendar/interfaces'
 import type { TCalendarView } from '@/calendar/types'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
 
 const props = defineProps<{
   view: TCalendarView
@@ -15,8 +16,13 @@ const props = defineProps<{
 }>()
 
 const store = useCalendarStore()
+const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
-const month = computed(() => format(store.selectedDate, 'MMMM'))
+const month = computed(() => {
+  const name = format(store.selectedDate, 'MMMM', dateLocale.value ? { locale: dateLocale.value } : undefined)
+  return name.charAt(0).toUpperCase() + name.slice(1)
+})
 const year = computed(() => store.selectedDate.getFullYear())
 const eventCount = computed(() => getEventsCount(props.events, store.selectedDate, props.view))
 
@@ -34,7 +40,7 @@ function handleNext() {
     <div class="flex items-center gap-2">
       <span class="text-lg font-semibold">{{ month }} {{ year }}</span>
       <Badge variant="outline" class="px-1.5">
-        {{ eventCount }} events
+        {{ labels.eventsCount(eventCount) }}
       </Badge>
     </div>
 
@@ -47,8 +53,8 @@ function handleNext() {
         <ChevronLeft />
       </Button>
 
-      <p class="text-sm text-muted-foreground">
-        {{ rangeText(view, store.selectedDate) }}
+      <p class="text-sm capitalize text-muted-foreground">
+        {{ rangeText(view, store.selectedDate, dateLocale) }}
       </p>
 
       <Button

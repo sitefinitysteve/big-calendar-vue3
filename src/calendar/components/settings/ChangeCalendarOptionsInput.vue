@@ -1,18 +1,21 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useCalendarStore } from '@/stores/calendar'
 import type { TCalendarView } from '@/calendar/types'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { useCalendarLabels } from '@/calendar/labels'
 
 const store = useCalendarStore()
+const labels = useCalendarLabels()
 
-const allViews: { view: TCalendarView; label: string }[] = [
-  { view: 'day', label: 'Day' },
-  { view: 'week', label: 'Week' },
-  { view: 'month', label: 'Month' },
-  { view: 'year', label: 'Year' },
-  { view: 'agenda', label: 'Agenda' },
-]
+const allViews = computed<{ view: TCalendarView; label: string }[]>(() => [
+  { view: 'day', label: labels.value.viewDay },
+  { view: 'week', label: labels.value.viewWeek },
+  { view: 'month', label: labels.value.viewMonth },
+  { view: 'year', label: labels.value.viewYear },
+  { view: 'agenda', label: labels.value.viewAgenda },
+])
 
 function toggleView(view: TCalendarView) {
   const current = store.availableViews
@@ -29,7 +32,7 @@ function toggleView(view: TCalendarView) {
 <template>
   <div class="space-y-4">
     <div class="space-y-2">
-      <label class="text-sm font-medium">Available Views</label>
+      <label class="text-sm font-medium">{{ labels.settingsAvailableViews }}</label>
       <div class="flex flex-wrap gap-1.5">
         <Button
           v-for="v in allViews"
@@ -45,22 +48,22 @@ function toggleView(view: TCalendarView) {
 
     <div class="flex items-center gap-3">
       <Switch :model-value="store.showUserSelect" @update:model-value="store.showUserSelect = $event" />
-      <label class="text-sm font-medium">Show User Select</label>
+      <label class="text-sm font-medium">{{ labels.settingsShowUserSelect }}</label>
     </div>
 
     <div class="flex items-center gap-3">
       <Switch :model-value="store.canAdd" @update:model-value="store.canAdd = $event" />
-      <label class="text-sm font-medium">Can Add Events</label>
+      <label class="text-sm font-medium">{{ labels.settingsCanAdd }}</label>
     </div>
 
     <div class="flex items-center gap-3">
       <Switch :model-value="store.canEdit" @update:model-value="store.canEdit = $event" />
-      <label class="text-sm font-medium">Can Edit Events</label>
+      <label class="text-sm font-medium">{{ labels.settingsCanEdit }}</label>
     </div>
 
     <div class="flex items-center gap-3">
       <Switch :model-value="store.canDelete" @update:model-value="store.canDelete = $event" />
-      <label class="text-sm font-medium">Can Delete Events</label>
+      <label class="text-sm font-medium">{{ labels.settingsCanDelete }}</label>
     </div>
   </div>
 </template>

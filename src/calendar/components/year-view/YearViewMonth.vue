@@ -5,6 +5,10 @@ import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import YearViewDayCell from '@/calendar/components/year-view/YearViewDayCell.vue'
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const props = defineProps<{
   month: Date
@@ -18,9 +22,16 @@ const emit = defineEmits<{
 
 const store = useCalendarStore()
 
-const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const WEEK_DAYS = computed(() => [
+  labels.value.weekdaySun, labels.value.weekdayMon, labels.value.weekdayTue,
+  labels.value.weekdayWed, labels.value.weekdayThu, labels.value.weekdayFri,
+  labels.value.weekdaySat,
+])
 
-const monthName = computed(() => format(props.month, 'MMMM'))
+const monthName = computed(() => {
+  const name = format(props.month, 'MMMM', dateLocale.value ? { locale: dateLocale.value } : undefined)
+  return name.charAt(0).toUpperCase() + name.slice(1)
+})
 
 const days = computed(() => {
   const firstDay = startOfMonth(props.month)

@@ -21,6 +21,10 @@ import EventBlock from '@/calendar/components/week-view/EventBlock.vue'
 import CalendarTimeline from '@/calendar/components/week-view/CalendarTimeline.vue'
 import WeekViewMultiDayEventsRow from '@/calendar/components/week-view/WeekViewMultiDayEventsRow.vue'
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -105,8 +109,8 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
 <template>
   <!-- Mobile message -->
   <div class="flex flex-col items-center justify-center border-b py-4 text-sm text-muted-foreground sm:hidden">
-    <p>Weekly view is not available on smaller devices.</p>
-    <p>Please switch to daily or monthly view.</p>
+    <p>{{ labels.weekViewNotAvailable }}</p>
+    <p>{{ labels.weekViewSwitchView }}</p>
   </div>
 
   <!-- Desktop week view -->
@@ -127,7 +131,7 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
             :key="index"
             class="py-2 text-center text-xs font-medium text-muted-foreground"
           >
-            {{ format(day, 'EE') }}
+            {{ format(day, 'EE', dateLocale ? { locale: dateLocale } : undefined) }}
             <span class="ml-1 font-semibold text-foreground">{{ format(day, 'd') }}</span>
           </span>
         </div>

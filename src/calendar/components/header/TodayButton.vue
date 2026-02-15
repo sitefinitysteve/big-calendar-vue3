@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { format } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
+import { useDateLocale } from '@/calendar/labels'
 
 const store = useCalendarStore()
+const dateLocale = useDateLocale()
 
 const today = new Date()
 
@@ -17,7 +19,7 @@ function handleClick() {
     @click="handleClick"
   >
     <p class="flex h-6 w-full items-center justify-center bg-primary text-center text-xs font-semibold text-primary-foreground">
-      {{ format(today, 'MMM').toUpperCase() }}
+      {{ format(today, 'MMM', dateLocale ? { locale: dateLocale } : undefined).toUpperCase() }}
     </p>
     <p class="flex w-full items-center justify-center text-lg font-bold">
       {{ today.getDate() }}

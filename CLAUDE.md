@@ -48,10 +48,13 @@ src/
 │   ├── types.ts                 # Type aliases (TCalendarView, TEventColor, etc.)
 │   ├── interfaces.ts            # Interfaces (IEvent, IUser, ICalendarCell)
 │   ├── helpers.ts               # Pure utility functions (no Vue dependency)
-│   ├── schemas.ts               # Zod validation schemas
+│   ├── labels.ts                # ICalendarLabels interface, DEFAULT_LABELS, injection keys
+│   ├── schemas.ts               # Zod validation schemas (createEventSchema factory)
 │   └── mocks.ts                 # Mock data for demo
+├── composables/
+│   └── useLocale.ts             # Demo locale composable (EN/FR/ES) — not exported from library
 ├── components/
-│   ├── layout/                  # AppHeader, ToggleTheme
+│   ├── layout/                  # AppHeader, ToggleTheme, ToggleLanguage
 │   └── ui/                      # shadcn-vue components (generated, do not hand-edit)
 ├── stores/calendar.ts           # Pinia store
 ├── layouts/CalendarLayout.vue   # Initializes store with mock data, wraps router-view
@@ -100,7 +103,7 @@ src/
 - Store actions: `initialize()`, `addEvent()`, `updateEvent()`, `deleteEvent()`, `setSelectedDate()`
 - Composables derive filtered/computed data from store — views don't access store directly for complex logic
 - CalendarContainer (BigCalendar) emits `@event-created`, `@event-updated`, `@event-deleted` for backend hooks
-- CalendarContainer accepts `availableViews` (restrict visible view buttons) and `showUserSelect` (toggle user dropdown) props
+- CalendarContainer accepts `availableViews` (restrict visible view buttons), `showUserSelect` (toggle user dropdown), `labels` (Partial<ICalendarLabels>), and `showViewTooltips` props
 
 ### Routing
 - CalendarHeader emits `changeView` instead of using RouterLink — router-agnostic
@@ -113,6 +116,31 @@ src/
 - CSS entry: `src/calendar-lib.css` — Tailwind + CSS variable defaults in `@layer big-calendar-base`
 - Vite lib config: `vite.config.lib.ts` — ESM output, externalizes peer deps, bundles shadcn-vue components
 - Build command: `npm run build:lib` → `dist/big-calendar-vue3.js`, `dist/style.css`, `dist/index.d.ts`
+
+### Multilingual Labels
+- All user-facing text uses the label system — no hardcoded strings in calendar components
+- `ICalendarLabels` interface defines all labels (flat structure, ~80 keys)
+- `DEFAULT_LABELS` provides English defaults
+- `BigCalendar` accepts `labels` prop (`Partial<ICalendarLabels>`) — override only what you need
+- `BigCalendar` accepts `showViewTooltips` prop (default: `true`) — toggles view button tooltips
+- `BigCalendar` accepts `dateLocale` prop (date-fns `Locale`) — localizes month/day names in `format()` calls
+- Child components access labels via `useCalendarLabels()` composable (uses provide/inject)
+- Child components access date locale via `useDateLocale()` composable
+- Function-valued labels for interpolation: `eventsCount`, `moreEvents`, `dayOfTotal`
+- Validation messages also use labels via `createEventSchema(labels)` factory
+- When adding new user-facing strings, always add a key to `ICalendarLabels` + `DEFAULT_LABELS` first
+- IMPORTANT: `useCalendarLabels()` returns `ComputedRef<ICalendarLabels>` — use `.value` in `<script setup>`, but NOT in `<template>` (Vue auto-unwraps refs in templates)
+
+### All-Day Events
+- All-day events must NEVER show time in any UI element
+- Check `event.isAllDay` before rendering time strings
+- Show `labels.allDay` text instead of time range for all-day events
+- Pattern: `<template v-if="event.isAllDay">{{ labels.allDay }}</template>`
+
+### View Button CSS Hooks
+- Each view button has `data-view="day|week|month|year|agenda"` attribute
+- Each view button has `bc-view-day`, `bc-view-week`, etc. CSS class
+- Parent container has existing `bc-view-buttons` class
 
 ## React → Vue Conversion Patterns
 

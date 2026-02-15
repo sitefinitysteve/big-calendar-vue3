@@ -2,7 +2,10 @@
 import { computed } from 'vue'
 import { format, parseISO, differenceInDays, startOfDay } from 'date-fns'
 import type { IEvent } from '@/calendar/interfaces'
+import { useDateLocale } from '@/calendar/labels'
 import AgendaEventCard from '@/calendar/components/agenda-view/AgendaEventCard.vue'
+
+const dateLocale = useDateLocale()
 
 const props = defineProps<{
   date: Date
@@ -33,8 +36,8 @@ const sortedSingleDayEvents = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <h3 class="sticky top-0 z-10 bg-background/95 py-2 text-sm font-semibold backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      {{ format(date, 'EEEE, MMMM d, yyyy') }}
+    <h3 class="sticky top-0 z-10 capitalize bg-background/95 py-2 text-sm font-semibold backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {{ format(date, 'EEEE, MMMM d, yyyy', dateLocale ? { locale: dateLocale } : undefined) }}
     </h3>
 
     <div class="space-y-2">

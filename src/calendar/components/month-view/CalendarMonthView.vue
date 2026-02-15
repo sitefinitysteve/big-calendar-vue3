@@ -5,6 +5,9 @@ import { useCalendarGrid } from '@/calendar/composables/useCalendarGrid'
 import { useEventPositioning } from '@/calendar/composables/useEventPositioning'
 import DayCell from '@/calendar/components/month-view/DayCell.vue'
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -27,7 +30,11 @@ const { eventPositions } = useEventPositioning(multiDayEvents, singleDayEvents, 
 
 const allEvents = computed(() => [...props.multiDayEvents, ...props.singleDayEvents])
 
-const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const WEEK_DAYS = computed(() => [
+  labels.value.weekdaySun, labels.value.weekdayMon, labels.value.weekdayTue,
+  labels.value.weekdayWed, labels.value.weekdayThu, labels.value.weekdayFri,
+  labels.value.weekdaySat,
+])
 </script>
 
 <template>

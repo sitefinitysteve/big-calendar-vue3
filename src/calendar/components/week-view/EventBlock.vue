@@ -94,7 +94,7 @@ function handleKeyDown(e: KeyboardEvent) {
       <p class="truncate font-semibold">{{ event.title }}</p>
     </div>
 
-    <p v-if="durationInMinutes > 25">
+    <p v-if="durationInMinutes > 25 && !event.isAllDay">
       {{ format(start, 'h:mm a') }} - {{ format(end, 'h:mm a') }}
     </p>
   </div>

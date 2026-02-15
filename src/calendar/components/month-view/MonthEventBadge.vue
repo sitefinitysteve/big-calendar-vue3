@@ -4,6 +4,9 @@ import { endOfDay, format, isSameDay, parseISO, startOfDay } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
 
 const props = defineProps<{
   event: IEvent
@@ -108,7 +111,7 @@ function handleKeyDown(e: KeyboardEvent) {
 
       <p v-if="['first', 'none'].includes(getPosition())" class="flex-1 truncate font-semibold">
         <span v-if="eventCurrentDay" class="text-xs">
-          Day {{ eventCurrentDay }} of {{ eventTotalDays }} &bull;&nbsp;
+          {{ labels.dayOfTotal(eventCurrentDay, eventTotalDays!) }} &bull;&nbsp;
         </span>
         {{ event.title }}
       </p>

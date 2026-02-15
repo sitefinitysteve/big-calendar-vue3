@@ -23,6 +23,10 @@ import CalendarTimeline from '@/calendar/components/week-view/CalendarTimeline.v
 import DayViewMultiDayEventsRow from '@/calendar/components/day-view/DayViewMultiDayEventsRow.vue'
 
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+
+const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -119,7 +123,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
         <div class="relative z-20 flex border-b">
           <div class="w-18" />
           <span class="flex-1 border-l py-2 text-center text-xs font-medium text-muted-foreground">
-            {{ format(selectedDate, 'EE') }}
+            {{ format(selectedDate, 'EE', dateLocale ? { locale: dateLocale } : undefined) }}
             <span class="font-semibold text-foreground">{{ format(selectedDate, 'd') }}</span>
           </span>
         </div>
@@ -232,7 +236,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
               <span class="relative inline-flex size-2.5 rounded-full bg-green-600" />
             </span>
 
-            <p class="text-sm font-semibold text-foreground">Happening now</p>
+            <p class="text-sm font-semibold text-foreground">{{ labels.happeningNow }}</p>
           </div>
 
           <ScrollArea class="h-[422px] px-4">
@@ -254,13 +258,16 @@ function getEventStyle(event: IEvent, groupIndex: number) {
 
                 <div class="flex items-center gap-1.5 text-muted-foreground">
                   <CalendarIcon class="size-3.5" />
-                  <span class="text-sm">{{ format(new Date(), 'MMM d, yyyy') }}</span>
+                  <span class="text-sm">{{ format(new Date(), 'MMM d, yyyy', dateLocale ? { locale: dateLocale } : undefined) }}</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 text-muted-foreground">
                   <Clock class="size-3.5" />
                   <span class="text-sm">
-                    {{ format(parseISO(event.startDate), 'h:mm a') }} - {{ format(parseISO(event.endDate), 'h:mm a') }}
+                    <template v-if="event.isAllDay">{{ labels.allDay }}</template>
+                    <template v-else>
+                      {{ format(parseISO(event.startDate), 'h:mm a') }} - {{ format(parseISO(event.endDate), 'h:mm a') }}
+                    </template>
                   </span>
                 </div>
               </div>
@@ -272,7 +279,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
           v-else
           class="p-4 text-center text-sm italic text-muted-foreground"
         >
-          No appointments or consultations at the moment
+          {{ labels.noCurrentEvents }}
         </p>
       </div>
     </div>
