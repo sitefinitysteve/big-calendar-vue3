@@ -1,5 +1,7 @@
 # Big Calendar — Vue 3
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/e87caded-ade9-4687-8b76-50ec662acf39/deploy-status)](https://app.netlify.com/projects/big-calendar-vue3/deploys)
+
 A fully-featured calendar component for Vue 3, ported from [lramos33/big-calendar](https://github.com/lramos33/big-calendar) (React/Next.js). Built with shadcn-vue, Tailwind CSS, and date-fns.
 
 **[Live Demo](https://big-calendar-vue3.netlify.app/month-view)**
