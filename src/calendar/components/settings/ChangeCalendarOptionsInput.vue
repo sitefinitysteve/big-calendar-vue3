@@ -43,9 +43,9 @@ function toggleView(view: TCalendarView) {
       </div>
     </div>
 
-    <div class="flex items-center justify-between">
-      <label class="text-sm font-medium">Show User Select</label>
+    <div class="flex items-center gap-3">
       <Switch :checked="store.showUserSelect" @update:checked="store.showUserSelect = $event" />
+      <label class="text-sm font-medium">Show User Select</label>
     </div>
   </div>
 </template>

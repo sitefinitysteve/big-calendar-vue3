@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { Settings } from 'lucide-vue-next'
 import { useCalendarStore } from '@/stores/calendar'
 import { USERS_MOCK, CALENDAR_ITEMS_MOCK } from '@/calendar/mocks'
+import { Button } from '@/components/ui/button'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import ChangeBadgeVariantInput from '@/calendar/components/settings/ChangeBadgeVariantInput.vue'
 import ChangeVisibleHoursInput from '@/calendar/components/settings/ChangeVisibleHoursInput.vue'
 import ChangeWorkingHoursInput from '@/calendar/components/settings/ChangeWorkingHoursInput.vue'
 import ChangeCalendarOptionsInput from '@/calendar/components/settings/ChangeCalendarOptionsInput.vue'
 
 const store = useCalendarStore()
+const settingsOpen = ref(false)
 
 onMounted(() => {
   store.initialize(USERS_MOCK, CALENDAR_ITEMS_MOCK)
@@ -25,24 +31,35 @@ onMounted(() => {
   <div class="mx-auto flex max-w-screen-2xl flex-col gap-4 px-8 py-4">
     <router-view />
 
-    <Accordion type="single" collapsible>
-      <AccordionItem value="item-1" class="border-none">
-        <AccordionTrigger class="flex-none gap-2 py-0 hover:no-underline">
-          <div class="flex items-center gap-2">
+    <div class="flex justify-start">
+      <Dialog v-model:open="settingsOpen">
+        <DialogTrigger as-child>
+          <Button variant="outline" size="sm">
             <Settings class="size-4" />
-            <p class="text-base font-semibold">Calendar settings</p>
-          </div>
-        </AccordionTrigger>
+            Calendar settings
+          </Button>
+        </DialogTrigger>
 
-        <AccordionContent>
-          <div class="mt-4 flex flex-col gap-6">
+        <DialogContent class="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Calendar settings</DialogTitle>
+            <DialogDescription>Configure calendar appearance and behavior.</DialogDescription>
+          </DialogHeader>
+
+          <div class="flex flex-col gap-6 py-4">
             <ChangeBadgeVariantInput />
             <ChangeCalendarOptionsInput />
             <ChangeVisibleHoursInput />
             <ChangeWorkingHoursInput />
           </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+
+          <DialogFooter>
+            <DialogClose as-child>
+              <Button>Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   </div>
 </template>
