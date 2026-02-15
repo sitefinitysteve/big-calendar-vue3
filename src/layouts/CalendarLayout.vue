@@ -12,6 +12,7 @@ import {
 import ChangeBadgeVariantInput from '@/calendar/components/settings/ChangeBadgeVariantInput.vue'
 import ChangeVisibleHoursInput from '@/calendar/components/settings/ChangeVisibleHoursInput.vue'
 import ChangeWorkingHoursInput from '@/calendar/components/settings/ChangeWorkingHoursInput.vue'
+import ChangeCalendarOptionsInput from '@/calendar/components/settings/ChangeCalendarOptionsInput.vue'
 
 const store = useCalendarStore()
 
@@ -36,6 +37,7 @@ onMounted(() => {
         <AccordionContent>
           <div class="mt-4 flex flex-col gap-6">
             <ChangeBadgeVariantInput />
+            <ChangeCalendarOptionsInput />
             <ChangeVisibleHoursInput />
             <ChangeWorkingHoursInput />
           </div>

@@ -19,7 +19,7 @@ const emit = defineEmits<{
 const store = useCalendarStore()
 
 const agendaCardVariants = cva(
-  'flex select-none items-center justify-between gap-3 rounded-md border p-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+  'bc-event-card flex select-none items-center justify-between gap-3 rounded-md border p-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
   {
     variants: {
       color: {

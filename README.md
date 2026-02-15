@@ -166,6 +166,8 @@ All CRUD events fire **after** the local store is updated, so the UI reflects th
 | `canAdd` | `boolean` | `true` | Show/hide "Add Event" button and time slot click-to-create |
 | `canEdit` | `boolean` | `true` | Show/hide Edit button in event details dialog |
 | `canDelete` | `boolean` | `true` | Show/hide Delete button in event details dialog |
+| `availableViews` | `TCalendarView[]` | All 5 views | Restrict which view buttons appear in the header |
+| `showUserSelect` | `boolean` | `true` | Show/hide the user/resource filter dropdown |
 
 Read-only example (all CRUD disabled):
 
@@ -173,11 +175,49 @@ Read-only example (all CRUD disabled):
 <BigCalendar v-model:view="view" :can-add="false" :can-edit="false" :can-delete="false" />
 ```
 
+Show only month and week views, no user filter:
+
+```vue
+<BigCalendar
+  v-model:view="view"
+  :available-views="['month', 'week']"
+  :show-user-select="false"
+/>
+
 ## Customization
 
 - **Theming**: The library ships with default CSS variables (zinc palette). Override them in your own CSS — the defaults are in a low-priority `@layer big-calendar-base`.
 - **Events**: Replace `store.initialize()` call with your own API data.
 - **State**: Access `useCalendarStore()` to read/write calendar state (selectedDate, badgeVariant, workingHours, etc.).
+
+### CSS Class Hooks
+
+All major elements have `bc-*` classes for CSS targeting:
+
+| Class | Element |
+|-------|---------|
+| `.bc-header` | Calendar header |
+| `.bc-view-buttons` | View toggle button group |
+| `.bc-event-badge` | Month view event badge |
+| `.bc-event-block` | Week/day view timed event |
+| `.bc-event-card` | Agenda view event card |
+| `.bc-event-bullet` | Small color dot (mobile month view) |
+
+Example — restyle event badges:
+
+```css
+/* Light mode */
+.bc-event-badge {
+  background-color: hsl(210 40% 96%);
+  border-color: hsl(210 40% 86%);
+}
+
+/* Dark mode */
+.dark .bc-event-badge {
+  background-color: hsl(210 40% 15%);
+  border-color: hsl(210 40% 25%);
+}
+```
 
 ## Origin & Attribution
 

@@ -19,10 +19,14 @@ const props = withDefaults(defineProps<{
   canAdd?: boolean
   canEdit?: boolean
   canDelete?: boolean
+  availableViews?: TCalendarView[]
+  showUserSelect?: boolean
 }>(), {
   canAdd: true,
   canEdit: true,
   canDelete: true,
+  availableViews: () => ['day', 'week', 'month', 'year', 'agenda'],
+  showUserSelect: true,
 })
 
 const emit = defineEmits<{
@@ -84,7 +88,7 @@ function handleEventUpdated(event: IEvent) {
 
 <template>
   <div class="overflow-hidden rounded-xl border">
-    <CalendarHeader :view="view" :events="filteredEvents" :can-add="canAdd" @add-event="handleAddEvent()" @change-view="handleChangeView" />
+    <CalendarHeader :view="view" :events="filteredEvents" :can-add="canAdd" :available-views="availableViews" :show-user-select="showUserSelect" @add-event="handleAddEvent()" @change-view="handleChangeView" />
 
     <CalendarMonthView
       v-if="view === 'month'"

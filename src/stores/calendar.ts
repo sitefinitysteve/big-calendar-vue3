@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { IEvent, IUser } from '@/calendar/interfaces'
-import type { TBadgeVariant, TVisibleHours, TWorkingHours } from '@/calendar/types'
+import type { TBadgeVariant, TCalendarView, TVisibleHours, TWorkingHours } from '@/calendar/types'
 
 const DEFAULT_WORKING_HOURS: TWorkingHours = {
   0: { from: 0, to: 0 },
@@ -23,6 +23,8 @@ export const useCalendarStore = defineStore('big-calendar', () => {
   const events = ref<IEvent[]>([])
   const workingHours = ref<TWorkingHours>({ ...DEFAULT_WORKING_HOURS })
   const visibleHours = ref<TVisibleHours>({ ...DEFAULT_VISIBLE_HOURS })
+  const availableViews = ref<TCalendarView[]>(['day', 'week', 'month', 'year', 'agenda'])
+  const showUserSelect = ref(true)
 
   function setSelectedDate(date: Date | undefined) {
     if (!date) return
@@ -64,6 +66,8 @@ export const useCalendarStore = defineStore('big-calendar', () => {
     events,
     workingHours,
     visibleHours,
+    availableViews,
+    showUserSelect,
     setSelectedDate,
     addEvent,
     updateEvent,

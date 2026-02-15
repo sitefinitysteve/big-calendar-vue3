@@ -8,7 +8,7 @@ defineProps<{
   class?: string
 }>()
 
-const eventBulletVariants = cva('size-2 rounded-full', {
+const eventBulletVariants = cva('bc-event-bullet size-2 rounded-full', {
   variants: {
     color: {
       blue: 'bg-blue-600 dark:bg-blue-500',

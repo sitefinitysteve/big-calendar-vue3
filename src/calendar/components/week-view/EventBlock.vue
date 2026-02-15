@@ -18,7 +18,7 @@ const emit = defineEmits<{
 const store = useCalendarStore()
 
 const calendarWeekEventCardVariants = cva(
-  'flex select-none flex-col gap-0.5 truncate whitespace-nowrap rounded-md border px-2 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+  'bc-event-block flex select-none flex-col gap-0.5 truncate whitespace-nowrap rounded-md border px-2 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
   {
     variants: {
       color: {

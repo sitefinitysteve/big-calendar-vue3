@@ -92,6 +92,7 @@ src/
 - Custom spacing/sizes defined in globals.css `@theme` block (e.g., `size-6.5`, `w-18`, `text-xxs`)
 - Dark mode: class-based via `.dark` on `<html>`, toggled via localStorage
 - Custom utility `bg-calendar-disabled-hour` for working hours pattern
+- Key UI elements have `bc-*` CSS class hooks for external targeting (`.bc-header`, `.bc-event-badge`, `.bc-event-block`, `.bc-event-card`, `.bc-event-bullet`, `.bc-view-buttons`)
 
 ### State Management
 - Pinia setup store syntax (not options syntax), store ID: `'big-calendar'`
@@ -99,6 +100,7 @@ src/
 - Store actions: `initialize()`, `addEvent()`, `updateEvent()`, `deleteEvent()`, `setSelectedDate()`
 - Composables derive filtered/computed data from store — views don't access store directly for complex logic
 - CalendarContainer (BigCalendar) emits `@event-created`, `@event-updated`, `@event-deleted` for backend hooks
+- CalendarContainer accepts `availableViews` (restrict visible view buttons) and `showUserSelect` (toggle user dropdown) props
 
 ### Routing
 - CalendarHeader emits `changeView` instead of using RouterLink — router-agnostic
