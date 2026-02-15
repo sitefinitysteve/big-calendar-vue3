@@ -44,8 +44,23 @@ function toggleView(view: TCalendarView) {
     </div>
 
     <div class="flex items-center gap-3">
-      <Switch :checked="store.showUserSelect" @update:checked="store.showUserSelect = $event" />
+      <Switch :model-value="store.showUserSelect" @update:model-value="store.showUserSelect = $event" />
       <label class="text-sm font-medium">Show User Select</label>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <Switch :model-value="store.canAdd" @update:model-value="store.canAdd = $event" />
+      <label class="text-sm font-medium">Can Add Events</label>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <Switch :model-value="store.canEdit" @update:model-value="store.canEdit = $event" />
+      <label class="text-sm font-medium">Can Edit Events</label>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <Switch :model-value="store.canDelete" @update:model-value="store.canDelete = $event" />
+      <label class="text-sm font-medium">Can Delete Events</label>
     </div>
   </div>
 </template>

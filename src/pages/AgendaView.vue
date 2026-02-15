@@ -10,5 +10,5 @@ function onChangeView(view: TCalendarView) { router.push(`/${view}-view`) }
 </script>
 
 <template>
-  <CalendarContainer view="agenda" :available-views="store.availableViews" :show-user-select="store.showUserSelect" @update:view="onChangeView" />
+  <CalendarContainer view="agenda" :available-views="store.availableViews" :show-user-select="store.showUserSelect" :can-add="store.canAdd" :can-edit="store.canEdit" :can-delete="store.canDelete" @update:view="onChangeView" />
 </template>

@@ -25,6 +25,9 @@ export const useCalendarStore = defineStore('big-calendar', () => {
   const visibleHours = ref<TVisibleHours>({ ...DEFAULT_VISIBLE_HOURS })
   const availableViews = ref<TCalendarView[]>(['day', 'week', 'month', 'year', 'agenda'])
   const showUserSelect = ref(true)
+  const canAdd = ref(true)
+  const canEdit = ref(true)
+  const canDelete = ref(true)
 
   function setSelectedDate(date: Date | undefined) {
     if (!date) return
@@ -68,6 +71,9 @@ export const useCalendarStore = defineStore('big-calendar', () => {
     visibleHours,
     availableViews,
     showUserSelect,
+    canAdd,
+    canEdit,
+    canDelete,
     setSelectedDate,
     addEvent,
     updateEvent,
