@@ -1,4 +1,4 @@
-# Big Calendar — Vue 3
+# Big Calendar: Vue 3
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/e87caded-ade9-4687-8b76-50ec662acf39/deploy-status)](https://app.netlify.com/projects/big-calendar-vue3/deploys)
 
