@@ -114,7 +114,7 @@ function handleKeyDown(e: KeyboardEvent) {
       </p>
     </div>
 
-    <span v-if="['first', 'none'].includes(getPosition())">
+    <span v-if="['first', 'none'].includes(getPosition()) && !event.isAllDay">
       {{ format(new Date(event.startDate), 'h:mm a') }}
     </span>
   </div>

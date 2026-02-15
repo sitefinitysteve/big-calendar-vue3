@@ -42,8 +42,8 @@ const sortedSingleDayEvents = computed(() => {
         v-for="{ event, currentDay, totalDays } in multiDayEventsWithDayInfo"
         :key="`multi-${event.id}`"
         :event="event"
-        :event-current-day="currentDay"
-        :event-total-days="totalDays"
+        :event-current-day="totalDays > 1 ? currentDay : undefined"
+        :event-total-days="totalDays > 1 ? totalDays : undefined"
         @open-details="emit('openDetails', $event)"
       />
 

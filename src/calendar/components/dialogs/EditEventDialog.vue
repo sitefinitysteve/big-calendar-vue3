@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { parseISO } from 'date-fns'
 import { AlertTriangle } from 'lucide-vue-next'
-import { useForm } from 'vee-validate'
+import { useForm, useFormValues } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useCalendarStore } from '@/stores/calendar'
 import { useUpdateEvent } from '@/calendar/composables/useUpdateEvent'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { TimeInput } from '@/components/ui/time-input'
 import { SingleDayPicker } from '@/components/ui/single-day-picker'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -52,6 +53,7 @@ const { updateEvent } = useUpdateEvent()
 
 const startParsed = parseISO(props.event.startDate)
 const endParsed = parseISO(props.event.endDate)
+const isAllDay = props.event.isAllDay ?? false
 
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(eventSchema),
@@ -59,23 +61,31 @@ const { handleSubmit } = useForm({
     user: props.event.user.id,
     title: props.event.title,
     description: props.event.description,
+    isAllDay,
     startDate: startParsed,
-    startTime: { hour: startParsed.getHours(), minute: startParsed.getMinutes() },
+    startTime: isAllDay ? undefined : { hour: startParsed.getHours(), minute: startParsed.getMinutes() },
     endDate: endParsed,
-    endTime: { hour: endParsed.getHours(), minute: endParsed.getMinutes() },
+    endTime: isAllDay ? undefined : { hour: endParsed.getHours(), minute: endParsed.getMinutes() },
     color: props.event.color,
   },
 })
+
+const formValues = useFormValues()
 
 const onSubmit = handleSubmit(values => {
   const user = store.users.find(u => u.id === values.user)
   if (!user) throw new Error('User not found')
 
   const startDateTime = new Date(values.startDate)
-  startDateTime.setHours(values.startTime.hour, values.startTime.minute)
-
   const endDateTime = new Date(values.endDate)
-  endDateTime.setHours(values.endTime.hour, values.endTime.minute)
+
+  if (values.isAllDay) {
+    startDateTime.setHours(0, 0, 0, 0)
+    endDateTime.setHours(23, 59, 0, 0)
+  } else {
+    startDateTime.setHours(values.startTime!.hour, values.startTime!.minute)
+    endDateTime.setHours(values.endTime!.hour, values.endTime!.minute)
+  }
 
   const updatedEvent: IEvent = {
     ...props.event,
@@ -85,6 +95,7 @@ const onSubmit = handleSubmit(values => {
     description: values.description,
     startDate: startDateTime.toISOString(),
     endDate: endDateTime.toISOString(),
+    isAllDay: values.isAllDay || undefined,
   }
 
   updateEvent(updatedEvent)
@@ -150,6 +161,15 @@ const EVENT_COLORS = [
           </FormItem>
         </FormField>
 
+        <FormField v-slot="{ value, handleChange }" name="isAllDay">
+          <FormItem class="flex items-center justify-between">
+            <FormLabel>All day</FormLabel>
+            <FormControl>
+              <Switch :checked="value" @update:checked="handleChange" />
+            </FormControl>
+          </FormItem>
+        </FormField>
+
         <div class="flex items-start gap-2">
           <FormField v-slot="{ value, handleChange }" name="startDate">
             <FormItem class="flex-1">
@@ -165,7 +185,7 @@ const EVENT_COLORS = [
             </FormItem>
           </FormField>
 
-          <FormField v-slot="{ value, handleChange }" name="startTime">
+          <FormField v-if="!formValues.isAllDay" v-slot="{ value, handleChange }" name="startTime">
             <FormItem class="flex-1">
               <FormLabel>Start Time</FormLabel>
               <FormControl>
@@ -195,7 +215,7 @@ const EVENT_COLORS = [
             </FormItem>
           </FormField>
 
-          <FormField v-slot="{ value, handleChange }" name="endTime">
+          <FormField v-if="!formValues.isAllDay" v-slot="{ value, handleChange }" name="endTime">
             <FormItem class="flex-1">
               <FormLabel>End Time</FormLabel>
               <FormControl>

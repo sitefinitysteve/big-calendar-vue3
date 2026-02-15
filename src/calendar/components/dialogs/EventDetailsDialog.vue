@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, isSameDay } from 'date-fns'
 import { Calendar, Clock, Text, User } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,21 +44,51 @@ const endDate = parseISO(props.event.endDate)
           </div>
         </div>
 
-        <div class="flex items-start gap-2">
-          <Calendar class="mt-1 size-4 shrink-0" />
-          <div>
-            <p class="text-sm font-medium">Start Date</p>
-            <p class="text-sm text-muted-foreground">{{ format(startDate, 'MMM d, yyyy h:mm a') }}</p>
+        <template v-if="event.isAllDay && isSameDay(startDate, endDate)">
+          <div class="flex items-start gap-2">
+            <Calendar class="mt-1 size-4 shrink-0" />
+            <div>
+              <p class="text-sm font-medium">Date</p>
+              <p class="text-sm text-muted-foreground">{{ format(startDate, 'MMM d, yyyy') }} (All day)</p>
+            </div>
           </div>
-        </div>
+        </template>
 
-        <div class="flex items-start gap-2">
-          <Clock class="mt-1 size-4 shrink-0" />
-          <div>
-            <p class="text-sm font-medium">End Date</p>
-            <p class="text-sm text-muted-foreground">{{ format(endDate, 'MMM d, yyyy h:mm a') }}</p>
+        <template v-else-if="event.isAllDay">
+          <div class="flex items-start gap-2">
+            <Calendar class="mt-1 size-4 shrink-0" />
+            <div>
+              <p class="text-sm font-medium">Start Date</p>
+              <p class="text-sm text-muted-foreground">{{ format(startDate, 'MMM d, yyyy') }}</p>
+            </div>
           </div>
-        </div>
+
+          <div class="flex items-start gap-2">
+            <Clock class="mt-1 size-4 shrink-0" />
+            <div>
+              <p class="text-sm font-medium">End Date</p>
+              <p class="text-sm text-muted-foreground">{{ format(endDate, 'MMM d, yyyy') }}</p>
+            </div>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="flex items-start gap-2">
+            <Calendar class="mt-1 size-4 shrink-0" />
+            <div>
+              <p class="text-sm font-medium">Start Date</p>
+              <p class="text-sm text-muted-foreground">{{ format(startDate, 'MMM d, yyyy h:mm a') }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2">
+            <Clock class="mt-1 size-4 shrink-0" />
+            <div>
+              <p class="text-sm font-medium">End Date</p>
+              <p class="text-sm text-muted-foreground">{{ format(endDate, 'MMM d, yyyy h:mm a') }}</p>
+            </div>
+          </div>
+        </template>
 
         <div class="flex items-start gap-2">
           <Text class="mt-1 size-4 shrink-0" />

@@ -51,11 +51,15 @@ export function useFilteredEvents(view: Ref<TCalendarView>) {
   })
 
   const singleDayEvents = computed(() =>
-    filteredEvents.value.filter(event => isSameDay(parseISO(event.startDate), parseISO(event.endDate)))
+    filteredEvents.value.filter(event =>
+      isSameDay(parseISO(event.startDate), parseISO(event.endDate)) && !event.isAllDay
+    )
   )
 
   const multiDayEvents = computed(() =>
-    filteredEvents.value.filter(event => !isSameDay(parseISO(event.startDate), parseISO(event.endDate)))
+    filteredEvents.value.filter(event =>
+      !isSameDay(parseISO(event.startDate), parseISO(event.endDate)) || !!event.isAllDay
+    )
   )
 
   // For year view: only use start dates as indicators

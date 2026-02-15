@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
-import { useForm } from 'vee-validate'
+import { useForm, useFormValues } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useCalendarStore } from '@/stores/calendar'
 import type { IEvent } from '@/calendar/interfaces'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { TimeInput } from '@/components/ui/time-input'
 import { SingleDayPicker } from '@/components/ui/single-day-picker'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -57,10 +58,13 @@ const { handleSubmit, resetForm } = useForm({
   initialValues: {
     title: '',
     description: '',
+    isAllDay: false,
     startDate: props.startDate,
     startTime: props.startTime,
   },
 })
+
+const formValues = useFormValues()
 
 watch(
   () => [props.startDate, props.startTime],
@@ -69,6 +73,7 @@ watch(
       values: {
         title: '',
         description: '',
+        isAllDay: false,
         startDate: props.startDate,
         startTime: props.startTime,
         user: undefined,
@@ -85,10 +90,15 @@ const onSubmit = handleSubmit(values => {
   if (!user) return
 
   const startDateTime = new Date(values.startDate)
-  startDateTime.setHours(values.startTime.hour, values.startTime.minute)
-
   const endDateTime = new Date(values.endDate)
-  endDateTime.setHours(values.endTime.hour, values.endTime.minute)
+
+  if (values.isAllDay) {
+    startDateTime.setHours(0, 0, 0, 0)
+    endDateTime.setHours(23, 59, 0, 0)
+  } else {
+    startDateTime.setHours(values.startTime!.hour, values.startTime!.minute)
+    endDateTime.setHours(values.endTime!.hour, values.endTime!.minute)
+  }
 
   const newEvent: IEvent = {
     id: Date.now(),
@@ -98,6 +108,7 @@ const onSubmit = handleSubmit(values => {
     description: values.description,
     startDate: startDateTime.toISOString(),
     endDate: endDateTime.toISOString(),
+    ...(values.isAllDay && { isAllDay: true }),
   }
 
   store.addEvent(newEvent)
@@ -164,6 +175,15 @@ const EVENT_COLORS = [
           </FormItem>
         </FormField>
 
+        <FormField v-slot="{ value, handleChange }" name="isAllDay">
+          <FormItem class="flex items-center justify-between">
+            <FormLabel>All day</FormLabel>
+            <FormControl>
+              <Switch :checked="value" @update:checked="handleChange" />
+            </FormControl>
+          </FormItem>
+        </FormField>
+
         <div class="flex items-start gap-2">
           <FormField v-slot="{ value, handleChange }" name="startDate">
             <FormItem class="flex-1">
@@ -179,7 +199,7 @@ const EVENT_COLORS = [
             </FormItem>
           </FormField>
 
-          <FormField v-slot="{ value, handleChange }" name="startTime">
+          <FormField v-if="!formValues.isAllDay" v-slot="{ value, handleChange }" name="startTime">
             <FormItem class="flex-1">
               <FormLabel>Start Time</FormLabel>
               <FormControl>
@@ -209,7 +229,7 @@ const EVENT_COLORS = [
             </FormItem>
           </FormField>
 
-          <FormField v-slot="{ value, handleChange }" name="endTime">
+          <FormField v-if="!formValues.isAllDay" v-slot="{ value, handleChange }" name="endTime">
             <FormItem class="flex-1">
               <FormLabel>End Time</FormLabel>
               <FormControl>

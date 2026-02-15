@@ -93,7 +93,10 @@ function handleKeyDown(e: KeyboardEvent) {
 
           <span class="flex items-center gap-1">
             <Clock class="size-3" />
-            {{ format(parseISO(event.startDate), 'h:mm a') }} - {{ format(parseISO(event.endDate), 'h:mm a') }}
+            <template v-if="event.isAllDay">All day</template>
+            <template v-else>
+              {{ format(parseISO(event.startDate), 'h:mm a') }} - {{ format(parseISO(event.endDate), 'h:mm a') }}
+            </template>
           </span>
 
           <span v-if="event.description" class="flex items-center gap-1">

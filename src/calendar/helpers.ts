@@ -266,7 +266,7 @@ export function getMonthCellEvents(date: Date, events: IEvent[], eventPositions:
     .map(event => ({
       ...event,
       position: eventPositions[event.id] ?? -1,
-      isMultiDay: event.startDate !== event.endDate,
+      isMultiDay: !isSameDay(parseISO(event.startDate), parseISO(event.endDate)) || !!event.isAllDay,
     }))
     .sort((a, b) => {
       if (a.isMultiDay && !b.isMultiDay) return -1
