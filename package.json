@@ -1,6 +1,6 @@
 {
   "name": "big-calendar-vue3",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "description": "A fully-featured calendar component for Vue 3 with 5 views, event CRUD, user filtering, and dark mode. Built with shadcn-vue and Tailwind CSS.",
   "author": "Steve McNiven-Scott <steve@sitefinitysteve.com> (https://www.sitefinitysteve.com)",

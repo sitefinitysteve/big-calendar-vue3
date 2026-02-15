@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useCalendarStore } from '@/stores/calendar'
 import { AvatarGroup } from '@/components/ui/avatar-group'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -7,10 +8,15 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 
 const store = useCalendarStore()
+
+const triggerLabel = computed(() => {
+  if (store.selectedUserId === 'all') return 'All'
+  const user = store.users.find(u => u.id === store.selectedUserId)
+  return user?.name ?? 'Select user'
+})
 
 function handleValueChange(value: string | number | bigint | Record<string, any> | null) {
   store.selectedUserId = value as string
@@ -20,7 +26,7 @@ function handleValueChange(value: string | number | bigint | Record<string, any>
 <template>
   <Select :model-value="store.selectedUserId" @update:model-value="handleValueChange">
     <SelectTrigger class="flex-1 md:w-48">
-      <SelectValue />
+      <span class="truncate">{{ triggerLabel }}</span>
     </SelectTrigger>
 
     <SelectContent align="end">
