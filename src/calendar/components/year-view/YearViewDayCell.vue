@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { isToday } from 'date-fns'
+import { format, isToday } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import type { IEvent } from '@/calendar/interfaces'
@@ -51,6 +51,7 @@ function handleClick() {
 
 <template>
   <button
+    :data-date="format(date, 'yyyy-MM-dd')"
     :class="cn(
       'flex flex-col items-center justify-start gap-0.5 rounded-md p-0.5 text-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
     )"

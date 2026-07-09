@@ -75,6 +75,7 @@ function handleKeyDown(e: KeyboardEvent) {
   <div
     role="button"
     tabindex="0"
+    :data-event-id="event.id"
     :class="cardClasses"
     :style="{ height: `${heightInPixels}px` }"
     @keydown="handleKeyDown"

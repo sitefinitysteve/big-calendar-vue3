@@ -65,6 +65,7 @@ function handleKeyDown(e: KeyboardEvent) {
   <div
     role="button"
     tabindex="0"
+    :data-event-id="event.id"
     :class="cn(agendaCardVariants({ color: getColorVariant() }))"
     @click="emit('openDetails', event)"
     @keydown="handleKeyDown"

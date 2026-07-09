@@ -88,6 +88,7 @@ function handleKeyDown(e: KeyboardEvent) {
     v-if="isVisible()"
     role="button"
     tabindex="0"
+    :data-event-id="event.id"
     :class="cn(
       eventBadgeVariants({
         color: store.badgeVariant === 'dot' ? `${event.color}-dot` : event.color,

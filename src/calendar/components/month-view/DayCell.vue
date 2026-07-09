@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { isToday, startOfDay } from 'date-fns'
+import { format, isToday, startOfDay } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import EventBullet from '@/calendar/components/month-view/EventBullet.vue'
 import MonthEventBadge from '@/calendar/components/month-view/MonthEventBadge.vue'
@@ -39,7 +39,7 @@ function handleClick() {
 </script>
 
 <template>
-  <div :class="cn('flex h-full flex-col gap-1 border-l border-t py-1.5 lg:pb-2 lg:pt-1', isSunday && 'border-l-0')">
+  <div :data-date="format(cell.date, 'yyyy-MM-dd')" :class="cn('flex h-full flex-col gap-1 border-l border-t py-1.5 lg:pb-2 lg:pt-1', isSunday && 'border-l-0')">
     <button
       :class="cn(
         'flex size-6 translate-x-1 items-center justify-center rounded-full text-xs font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring lg:px-2',

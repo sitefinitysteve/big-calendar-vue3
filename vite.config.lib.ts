@@ -10,7 +10,9 @@ export default defineConfig({
     tailwindcss(),
     dts({
       tsconfigPath: "./tsconfig.app.json",
-      rollupTypes: true,
+      // vite-plugin-dts v5 emits a per-file declaration tree and no longer bundles
+      // via @microsoft/api-extractor — which keeps `npm audit` clean (no lodash /
+      // minimatch chain). dist/index.d.ts still re-exports the full public API.
       include: ["src/**/*.ts", "src/**/*.vue"],
     }),
   ],

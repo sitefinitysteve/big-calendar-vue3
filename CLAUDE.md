@@ -103,7 +103,10 @@ src/
 - Store actions: `initialize()`, `addEvent()`, `updateEvent()`, `deleteEvent()`, `setSelectedDate()`
 - Composables derive filtered/computed data from store — views don't access store directly for complex logic
 - CalendarContainer (BigCalendar) emits `@event-created`, `@event-updated`, `@event-deleted` for backend hooks
+- CalendarContainer emits `@day-click` (payload: `yyyy-MM-dd` string, built with date-fns `format` so it is UTC-safe) when a day is clicked in month/year views, and `@event-click` (payload: `IEvent`) when an event chip is clicked in any view — for host apps that drive their own dialogs/routing
+- CalendarContainer emits `@day-context-menu` and `@event-context-menu` on right-click (payload: `{ date | event, x, y, originalEvent }`) — handled via a single delegated `@contextmenu` listener on the calendar root that reads `data-date` (day cells) / `data-event-id` (event chips); the native browser menu is suppressed only when a listener is attached (detected via `getCurrentInstance().vnode.props`)
 - CalendarContainer accepts `availableViews` (restrict visible view buttons), `showUserSelect` (toggle user dropdown), `labels` (Partial<ICalendarLabels>), and `showViewTooltips` props
+- CalendarContainer accepts `navigateOnDayClick` (default `true`; set `false` so a day click only emits `@day-click` instead of switching to day view) and `openDetailsOnEventClick` (default `true`; set `false` so an event click only emits `@event-click` instead of opening the built-in details dialog) — together these enable a fully "events-only" integration
 
 ### Routing
 - CalendarHeader emits `changeView` instead of using RouterLink — router-agnostic
