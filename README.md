@@ -4,6 +4,8 @@
 
 A fully-featured calendar component for Vue 3, ported from [lramos33/big-calendar](https://github.com/lramos33/big-calendar) (React/Next.js). Built with shadcn-vue, Tailwind CSS, and date-fns.
 
+> **Using React?** Check out the sibling package [big-calendar-react](https://github.com/sitefinitysteve/big-calendar-react) ([npm](https://www.npmjs.com/package/big-calendar-react)) — a 1:1 feature-parity React 19 port of this library.
+
 **[Live Demo](https://big-calendar-vue3.netlify.app/month-view)**
 
 <p align="center">
@@ -428,6 +430,8 @@ This project is a Vue 3 port of the original [Big Calendar](https://github.com/l
 </p>
 
 The Vue 3 port was created by [Steve McNiven-Scott](https://www.sitefinitysteve.com) with the assistance of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Opus 4.6) for the React-to-Vue migration. The port preserves the original's design, layout, and functionality while rewriting all components using Vue 3 idioms (Composition API, Pinia, Vue Router, VeeValidate).
+
+A modern React 19 port of this library is also available: [big-calendar-react](https://github.com/sitefinitysteve/big-calendar-react) ([npm](https://www.npmjs.com/package/big-calendar-react)) — same features, built on shadcn/ui (Base UI), Zustand, and react-hook-form.
 
 ## License
 
