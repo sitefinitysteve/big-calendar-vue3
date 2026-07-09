@@ -29,8 +29,26 @@ drive their own dialogs, routing, or API calls instead of the built-in dialogs.
   targeting/automation.
 
 Setting both new props to `false` yields a fully headless, events-only calendar
-that never opens a built-in modal. All defaults are unchanged, so existing
-integrations behave exactly as before.
+that never opens a built-in modal. Library prop defaults are unchanged, so
+existing integrations behave exactly as before.
+
+### Added — right-click command menu
+
+- **`eventCommands`** / **`dayCommands`** props — supply `ICalendarCommand[]` and
+  `BigCalendar` renders a built-in reka-ui context menu on right-click, emitting
+  **`@command`** (`{ commandId, event?, date? }`) when an item is chosen. The
+  library performs no action itself.
+- **Stock Edit/Delete** via **`showEditCommand`** / **`showDeleteCommand`**, which
+  accept `true` (all views) or a `TCalendarView[]` to scope them. They only emit
+  `@command` (ids `'edit'` / `'delete'`) — the library never edits or deletes.
+- **Per-view scoping** — each `ICalendarCommand` accepts an optional
+  `views?: TCalendarView[]`, so one command list can be scoped per view without
+  duplicating definitions. The menu opens only when a command applies to the
+  right-clicked target and current view; otherwise the native menu is untouched.
+- New exported types: **`ICalendarCommand`**, **`ICalendarCommandSelect`**.
+- The command menu supersedes the raw `@day-context-menu` / `@event-context-menu`
+  events per target: those still fire (for drawing your own menu) only when no
+  commands are configured for that target.
 
 ### Changed — toolchain upgrade
 

@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance, provide, ref } from 'vue'
 import { format } from 'date-fns'
+import { Pencil, Trash2 } from 'lucide-vue-next'
 import type { TCalendarView } from '@/calendar/types'
-import type { IEvent } from '@/calendar/interfaces'
+import type { IEvent, ICalendarCommand, ICalendarCommandSelect } from '@/calendar/interfaces'
 import type { Locale } from 'date-fns'
 import type { ICalendarLabels } from '@/calendar/labels'
 import { DEFAULT_LABELS, CALENDAR_LABELS_KEY, CALENDAR_FLAGS_KEY, CALENDAR_DATE_LOCALE_KEY } from '@/calendar/labels'
 import { useCalendarStore } from '@/stores/calendar'
 import { useFilteredEvents } from '@/calendar/composables/useFilteredEvents'
+import CalendarContextMenu from '@/calendar/components/CalendarContextMenu.vue'
 import CalendarHeader from '@/calendar/components/header/CalendarHeader.vue'
 import CalendarMonthView from '@/calendar/components/month-view/CalendarMonthView.vue'
 import CalendarWeekView from '@/calendar/components/week-view/CalendarWeekView.vue'
@@ -30,6 +32,14 @@ const props = withDefaults(defineProps<{
   dateLocale?: Locale
   navigateOnDayClick?: boolean
   openDetailsOnEventClick?: boolean
+  // Right-click command menu (opt-in): when provided, right-clicking an event /
+  // day opens a built-in reka-ui menu of these commands and emits `@command`.
+  // Each command may set `views` to scope itself; the stock Edit/Delete toggles
+  // accept `true` (all views) or an array of views to scope them too.
+  eventCommands?: ICalendarCommand[]
+  dayCommands?: ICalendarCommand[]
+  showEditCommand?: boolean | TCalendarView[]
+  showDeleteCommand?: boolean | TCalendarView[]
 }>(), {
   canAdd: true,
   canEdit: true,
@@ -40,6 +50,10 @@ const props = withDefaults(defineProps<{
   showViewTooltips: true,
   navigateOnDayClick: true,
   openDetailsOnEventClick: true,
+  eventCommands: () => [],
+  dayCommands: () => [],
+  showEditCommand: false,
+  showDeleteCommand: false,
 })
 
 const emit = defineEmits<{
@@ -61,6 +75,9 @@ const emit = defineEmits<{
   'dayContextMenu': [payload: { date: string; x: number; y: number; originalEvent: MouseEvent }]
   // Fired on right-click (contextmenu) of an event chip in any view.
   'eventContextMenu': [payload: { event: IEvent; x: number; y: number; originalEvent: MouseEvent }]
+  // Fired when a right-click menu command is selected. The library performs no
+  // action itself — the consumer handles the command (e.g. open its own editor).
+  'command': [payload: ICalendarCommandSelect]
 }>()
 
 const store = useCalendarStore()
@@ -125,33 +142,107 @@ function handleDayClick(date: Date) {
   if (props.navigateOnDayClick) emit('update:view', 'day')
 }
 
-// Right-click (contextmenu) handling via delegation on the calendar root. We
-// only preventDefault (suppress the native menu) when the consumer actually
-// listens for the matching event — otherwise native right-click is untouched.
+// Per-view scoping helpers: a command with no `views` shows everywhere; the
+// stock toggles accept `true` (all views) or a list of views.
+function commandInView(command: ICalendarCommand) {
+  return !command.views || command.views.includes(props.view)
+}
+function stockInView(setting: boolean | TCalendarView[] | undefined) {
+  return Array.isArray(setting) ? setting.includes(props.view) : !!setting
+}
+
+// The event menu = consumer's custom commands + opt-in stock Edit/Delete (which
+// only emit `@command`; the library never edits/deletes), all filtered to the
+// current view. The day menu is fully consumer-defined.
+const eventMenuCommands = computed<ICalendarCommand[]>(() => {
+  const custom = (props.eventCommands ?? []).filter(commandInView)
+  const stock: ICalendarCommand[] = []
+  const showEdit = stockInView(props.showEditCommand)
+  const showDelete = stockInView(props.showDeleteCommand)
+  // Separate the stock group from any custom commands above it.
+  const separate = custom.length > 0
+  if (showEdit) {
+    stock.push({ id: 'edit', label: mergedLabels.value.buttonEdit, icon: Pencil, separatorBefore: separate })
+  }
+  if (showDelete) {
+    stock.push({ id: 'delete', label: mergedLabels.value.buttonDelete, icon: Trash2, destructive: true, separatorBefore: separate && !showEdit })
+  }
+  return [...custom, ...stock]
+})
+const dayMenuCommands = computed<ICalendarCommand[]>(() => (props.dayCommands ?? []).filter(commandInView))
+
+// Which commands + which target the (reka-ui) context menu should use. reka-ui
+// owns the open state and positioning; we only stage the content on right-click.
+type MenuTarget = { type: 'event'; event: IEvent } | { type: 'day'; date: string }
+const menuCommands = ref<ICalendarCommand[]>([])
+const menuTarget = ref<MenuTarget | null>(null)
+
+function handleCommandSelect(command: ICalendarCommand) {
+  const target = menuTarget.value
+  if (!target) return
+  const payload: ICalendarCommandSelect = { commandId: command.id }
+  if (target.type === 'event') payload.event = target.event
+  else payload.date = target.date
+  emit('command', payload)
+}
+
+// Runs in the CAPTURE phase, before reka-ui's ContextMenu trigger (a bubble-phase
+// listener on the same element). This lets us decide whether a menu should open:
+//  - target has commands  -> stage them and let reka-ui open + position the menu
+//  - no commands but a raw @day/eventContextMenu listener -> emit that instead
+//  - otherwise            -> block reka-ui and leave the native browser menu alone
 function hasListener(name: 'onDayContextMenu' | 'onEventContextMenu') {
   return !!instance?.vnode.props?.[name]
 }
 
+// Stop reka-ui's ContextMenu from opening (no blank menu) without touching the
+// native menu — we deliberately do NOT preventDefault here.
+function blockMenu(e: MouseEvent) {
+  menuCommands.value = []
+  menuTarget.value = null
+  e.stopImmediatePropagation()
+}
+
 function handleContextMenu(e: MouseEvent) {
   const targetEl = e.target as HTMLElement | null
-  if (!targetEl) return
+  if (!targetEl) { blockMenu(e); return }
 
   const eventEl = targetEl.closest<HTMLElement>('[data-event-id]')
-  if (eventEl && hasListener('onEventContextMenu')) {
-    const id = Number(eventEl.dataset.eventId)
-    const found = filteredEvents.value.find(ev => ev.id === id)
+  if (eventEl) {
+    const found = filteredEvents.value.find(ev => ev.id === Number(eventEl.dataset.eventId))
     if (found) {
-      e.preventDefault()
-      emit('eventContextMenu', { event: found, x: e.clientX, y: e.clientY, originalEvent: e })
+      if (eventMenuCommands.value.length) {
+        menuCommands.value = eventMenuCommands.value
+        menuTarget.value = { type: 'event', event: found }
+        return // let reka-ui open + position the menu
+      }
+      if (hasListener('onEventContextMenu')) {
+        e.preventDefault()
+        emit('eventContextMenu', { event: found, x: e.clientX, y: e.clientY, originalEvent: e })
+      }
+      blockMenu(e)
       return
     }
   }
 
   const dayEl = targetEl.closest<HTMLElement>('[data-date]')
-  if (dayEl?.dataset.date && hasListener('onDayContextMenu')) {
-    e.preventDefault()
-    emit('dayContextMenu', { date: dayEl.dataset.date, x: e.clientX, y: e.clientY, originalEvent: e })
+  if (dayEl?.dataset.date) {
+    const date = dayEl.dataset.date
+    if (dayMenuCommands.value.length) {
+      menuCommands.value = dayMenuCommands.value
+      menuTarget.value = { type: 'day', date }
+      return
+    }
+    if (hasListener('onDayContextMenu')) {
+      e.preventDefault()
+      emit('dayContextMenu', { date, x: e.clientX, y: e.clientY, originalEvent: e })
+    }
+    blockMenu(e)
+    return
   }
+
+  // Right-clicked neither an event nor a day (e.g. the header) — no built-in menu.
+  blockMenu(e)
 }
 
 function handleEventCreated(event: IEvent) {
@@ -164,8 +255,9 @@ function handleEventUpdated(event: IEvent) {
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-xl border" @contextmenu="handleContextMenu">
-    <CalendarHeader :view="view" :events="filteredEvents" :can-add="canAdd" :available-views="availableViews" :show-user-select="showUserSelect" @add-event="handleAddEvent()" @change-view="handleChangeView" />
+  <CalendarContextMenu :commands="menuCommands" @select="handleCommandSelect">
+    <div class="overflow-hidden rounded-xl border" @contextmenu.capture="handleContextMenu">
+      <CalendarHeader :view="view" :events="filteredEvents" :can-add="canAdd" :available-views="availableViews" :show-user-select="showUserSelect" @add-event="handleAddEvent()" @change-view="handleChangeView" />
 
     <CalendarMonthView
       v-if="view === 'month'"
@@ -206,7 +298,8 @@ function handleEventUpdated(event: IEvent) {
       :multi-day-events="multiDayEvents"
       @open-details="handleOpenDetails"
     />
-  </div>
+    </div>
+  </CalendarContextMenu>
 
   <!-- Dialogs rendered outside the calendar border -->
   <EventDetailsDialog

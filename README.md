@@ -36,7 +36,7 @@ A fully-featured calendar component for Vue 3, ported from [lramos33/big-calenda
 ### Install from npm
 
 ```bash
-npm install big-calendar-vue3 date-fns@3
+npm install big-calendar-vue3 date-fns@4
 ```
 
 > If you already use [shadcn-vue](https://www.shadcn-vue.com/), most peer dependencies are already in your project. The only new one is `date-fns`.
@@ -88,7 +88,7 @@ The calendar manages all UI state internally. When the user creates, edits, or d
 |---------|-----------------------------------|
 | vue ^3.5 | Yes |
 | pinia ^3 | Yes |
-| date-fns ^3 | No |
+| date-fns ^4 | No |
 | reka-ui ^2 | Yes |
 | @internationalized/date ^3 | Yes (via reka-ui) |
 | @vueuse/core ^14 | Yes |
@@ -144,7 +144,7 @@ Copy `src/calendar/` and `src/stores/calendar.ts` into your project. See the `sr
 | State | Pinia |
 | UI Components | shadcn-vue (Reka UI primitives) |
 | Forms | VeeValidate + zod |
-| Dates | date-fns 3 |
+| Dates | date-fns 4 |
 | Icons | lucide-vue-next |
 | Styling | Tailwind CSS v4 |
 | Build | Vite |
@@ -152,14 +152,99 @@ Copy `src/calendar/` and `src/stores/calendar.ts` into your project. See the `sr
 
 ## Events
 
+### Built-in CRUD dialogs
+
 | Event | Payload | When |
 |-------|---------|------|
-| `@event-created` | `IEvent` | User submits the Add Event dialog |
-| `@event-updated` | `IEvent` | User submits the Edit Event dialog |
-| `@event-deleted` | `IEvent` | User clicks Delete in the Event Details dialog |
+| `@event-created` | `IEvent` | User submits the built-in Add Event dialog |
+| `@event-updated` | `IEvent` | User submits the built-in Edit Event dialog |
+| `@event-deleted` | `IEvent` | User clicks Delete in the built-in Event Details dialog |
 | `@update:view` | `TCalendarView` | User clicks a view button in the header |
 
 All CRUD events fire **after** the local store is updated, so the UI reflects the change immediately. Use these hooks to persist changes to your backend.
+
+## Interaction events (bring your own UI)
+
+Prefer to drive your own dialogs? `BigCalendar` can run "events-only": it fires events and lets your app decide what to do, instead of opening its built-in dialogs.
+
+| Event | Payload | Fires on |
+|-------|---------|----------|
+| `@day-click` | `string` — the local date as `yyyy-MM-dd` (built with date-fns `format`, so it is never shifted by UTC conversion) | Clicking a day in **month/year** views |
+| `@event-click` | `IEvent` | Clicking an event chip in **any** view |
+
+```vue
+<BigCalendar
+  v-model:view="view"
+  :navigate-on-day-click="false"        <!-- day click emits instead of switching to the day view -->
+  :open-details-on-event-click="false"  <!-- event click emits instead of opening the built-in dialog -->
+  @day-click="date => openMyCreateDialog(date)"
+  @event-click="event => openMyEditDialog(event.id)"
+/>
+```
+
+- `navigateOnDayClick` (default `true`) — set `false` so a day click only emits `@day-click`.
+- `openDetailsOnEventClick` (default `true`) — set `false` so an event click only emits `@event-click`.
+
+### Right-click: draw your own menu
+
+Listen for the raw context-menu events to render your own menu. They fire **only** when no commands are configured for that target (see below), and the native browser menu is left alone unless you attach a listener.
+
+| Event | Payload |
+|-------|---------|
+| `@day-context-menu` | `{ date: string; x: number; y: number; originalEvent: MouseEvent }` |
+| `@event-context-menu` | `{ event: IEvent; x: number; y: number; originalEvent: MouseEvent }` |
+
+## Right-click command menu
+
+Alternatively, let `BigCalendar` render the menu for you. Provide commands and it shows a built-in reka-ui context menu on right-click, emitting `@command` when an item is chosen — **the library never performs the action itself.**
+
+```vue
+<script setup lang="ts">
+import type { ICalendarCommand, ICalendarCommandSelect } from 'big-calendar-vue3'
+import { Copy, Clock } from 'lucide-vue-next'
+
+// Define commands ONCE; scope any of them to specific views with `views`.
+const eventCommands: ICalendarCommand[] = [
+  { id: 'duplicate',  label: 'Duplicate',  icon: Copy },                          // every view
+  { id: 'reschedule', label: 'Reschedule', icon: Clock, views: ['week', 'day'] }, // timed views only
+]
+const dayCommands: ICalendarCommand[] = [
+  { id: 'new-log', label: 'New log entry' },                                      // month/year day cells
+]
+
+function onCommand(p: ICalendarCommandSelect) {
+  // p.commandId, plus p.event (event menu) or p.date (day menu)
+  if (p.commandId === 'edit') openMyEditDialog(p.event!.id)
+}
+</script>
+
+<template>
+  <BigCalendar
+    v-model:view="view"
+    :event-commands="eventCommands"
+    :day-commands="dayCommands"
+    show-edit-command                                 <!-- stock Edit on all views  -->
+    :show-delete-command="['month', 'week', 'day']"   <!-- stock Delete, scoped      -->
+    @command="onCommand"
+  />
+</template>
+```
+
+**`ICalendarCommand`**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Echoed back in the `@command` payload (e.g. `'edit'`, `'delete'`) |
+| `label` | `string` | Menu text |
+| `icon` | `Component` | Optional icon component (e.g. a lucide icon) |
+| `destructive` | `boolean` | Red styling (used by stock Delete) |
+| `separatorBefore` | `boolean` | Render a separator above this item |
+| `disabled` | `boolean` | Dim & non-selectable |
+| `views` | `TCalendarView[]` | Restrict to these views; omit to show on all |
+
+- Stock **Edit**/**Delete** are opt-in via `showEditCommand` / `showDeleteCommand`, which accept `true` (all views) or a `TCalendarView[]` to scope them. They only emit `@command` (ids `'edit'` / `'delete'`).
+- The menu opens **only** when at least one command applies to the right-clicked target and current view; otherwise the native browser menu is untouched (no blank menu).
+- Event commands work wherever there are event chips (month/week/day/agenda); day commands work wherever there are day cells (month/year).
 
 ## Props
 
@@ -174,6 +259,12 @@ All CRUD events fire **after** the local store is updated, so the UI reflects th
 | `labels` | `Partial<ICalendarLabels>` | `{}` | Override any user-facing text (see [Multilingual Labels](#multilingual-labels)) |
 | `showViewTooltips` | `boolean` | `true` | Show/hide tooltips on view toggle buttons |
 | `dateLocale` | `Locale` (date-fns) | `undefined` | date-fns locale for month/day name formatting |
+| `navigateOnDayClick` | `boolean` | `true` | When `false`, a day click emits `@day-click` instead of switching to the day view |
+| `openDetailsOnEventClick` | `boolean` | `true` | When `false`, an event click emits `@event-click` instead of opening the built-in details dialog |
+| `eventCommands` | `ICalendarCommand[]` | `[]` | Right-click menu commands for events (see [Right-click command menu](#right-click-command-menu)) |
+| `dayCommands` | `ICalendarCommand[]` | `[]` | Right-click menu commands for days (month/year) |
+| `showEditCommand` | `boolean \| TCalendarView[]` | `false` | Add a stock "Edit" command — `true` (all views) or a list of views |
+| `showDeleteCommand` | `boolean \| TCalendarView[]` | `false` | Add a stock "Delete" command — `true` (all views) or a list of views |
 
 Read-only example (all CRUD disabled):
 

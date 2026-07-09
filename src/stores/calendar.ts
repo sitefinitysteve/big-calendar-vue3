@@ -25,7 +25,11 @@ export const useCalendarStore = defineStore('big-calendar', () => {
   const visibleHours = ref<TVisibleHours>({ ...DEFAULT_VISIBLE_HOURS })
   const availableViews = ref<TCalendarView[]>(['day', 'week', 'month', 'year', 'agenda'])
   const showUserSelect = ref(true)
-  const canAdd = ref(true)
+  // Demo default: start events-only so clicking an empty day/slot does NOT pop
+  // the built-in Add dialog. The settings switch (ChangeCalendarOptionsInput)
+  // re-enables it. Note: this is the demo store's default; `BigCalendar`'s own
+  // `canAdd` prop still defaults to `true` for library consumers.
+  const canAdd = ref(false)
   const canEdit = ref(true)
   const canDelete = ref(true)
 

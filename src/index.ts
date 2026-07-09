@@ -39,7 +39,7 @@ export {
 
 // Types & Interfaces
 export type { TCalendarView, TEventColor, TBadgeVariant, TWorkingHours, TVisibleHours } from '@/calendar/types'
-export type { IEvent, IUser, ICalendarCell } from '@/calendar/interfaces'
+export type { IEvent, IUser, ICalendarCell, ICalendarCommand, ICalendarCommandSelect } from '@/calendar/interfaces'
 
 // Labels
 export type { ICalendarLabels } from '@/calendar/labels'
