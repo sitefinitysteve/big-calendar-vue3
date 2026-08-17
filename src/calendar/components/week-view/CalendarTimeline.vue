@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { format } from 'date-fns'
 import { useCurrentTime } from '@/calendar/composables/useCurrentTime'
+import { useDateLocale } from '@/calendar/labels'
+import { formatTime } from '@/calendar/date-format'
+import { useCalendarCustomization } from '@/calendar/customization'
+import { cn } from '@/lib/utils'
 
 const props = defineProps<{
   firstVisibleHour: number
@@ -9,6 +12,8 @@ const props = defineProps<{
 }>()
 
 const { currentTime } = useCurrentTime()
+const dateLocale = useDateLocale()
+const customization = useCalendarCustomization()
 
 const currentHour = computed(() => currentTime.value.getHours())
 
@@ -25,13 +30,20 @@ const currentTimePosition = computed(() => {
   return ((minutes - visibleStartMinutes) / visibleRangeMinutes) * 100
 })
 
-const formattedTime = computed(() => format(currentTime.value, 'h:mm a'))
+const timelineClasses = computed(() =>
+  cn(
+    'pointer-events-none absolute inset-x-0 z-50 border-t border-primary',
+    customization.value.classNames?.timeline,
+  ),
+)
+
+const formattedTime = computed(() => formatTime(currentTime.value, dateLocale.value))
 </script>
 
 <template>
   <div
     v-if="isVisible"
-    class="pointer-events-none absolute inset-x-0 z-50 border-t border-primary"
+    :class="timelineClasses"
     :style="{ top: `${currentTimePosition}%` }"
   >
     <div class="absolute left-0 top-0 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />

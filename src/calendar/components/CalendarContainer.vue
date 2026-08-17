@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, getCurrentInstance, provide, ref } from 'vue'
+import { computed, getCurrentInstance, provide, ref, useSlots } from 'vue'
 import { format } from 'date-fns'
 import { Pencil, Trash2 } from 'lucide-vue-next'
 import type { TCalendarView } from '@/calendar/types'
@@ -7,6 +7,9 @@ import type { IEvent, ICalendarCommand, ICalendarCommandSelect } from '@/calenda
 import type { Locale } from 'date-fns'
 import type { ICalendarLabels } from '@/calendar/labels'
 import { DEFAULT_LABELS, CALENDAR_LABELS_KEY, CALENDAR_FLAGS_KEY, CALENDAR_DATE_LOCALE_KEY } from '@/calendar/labels'
+import type { ICalendarClassNames, ICalendarCustomization } from '@/calendar/customization'
+import { CALENDAR_CUSTOMIZATION_KEY } from '@/calendar/customization'
+import { cn } from '@/lib/utils'
 import { useCalendarStore } from '@/stores/calendar'
 import { useFilteredEvents } from '@/calendar/composables/useFilteredEvents'
 import CalendarContextMenu from '@/calendar/components/CalendarContextMenu.vue'
@@ -40,6 +43,26 @@ const props = withDefaults(defineProps<{
   dayCommands?: ICalendarCommand[]
   showEditCommand?: boolean | TCalendarView[]
   showDeleteCommand?: boolean | TCalendarView[]
+
+  // ---- Customization (all optional; omitting every one renders v1.1.0 output) ----
+  /** Hide the built-in header entirely (bring your own toolbar via `#header`). */
+  hideHeader?: boolean
+  /** Controlled selection: the library holds no selection state of its own. */
+  selectedEventId?: number | null
+  /** Pixel height of one hour row in week/day views. Default 96. */
+  hourHeight?: number
+  /** Week/day scroll-area height. Defaults to the stock 736px (week) / 800px (day). */
+  height?: number | string
+  /** Let the week/day grid size to its content instead of scrolling. */
+  autoHeight?: boolean
+  /** Month-view event slots per day cell. Default 3. */
+  maxEventsPerDayCell?: number
+  /** Week view: max badge rows in the all-day strip before it scrolls internally. Default: uncapped. */
+  allDayMaxRows?: number
+  /** Extra classes merged onto the library's structural elements. */
+  classNames?: ICalendarClassNames
+  /** Per-day extra classes for month-view cells. */
+  dayCellClassName?: (date: Date) => string | undefined
 }>(), {
   canAdd: true,
   canEdit: true,
@@ -54,6 +77,9 @@ const props = withDefaults(defineProps<{
   dayCommands: () => [],
   showEditCommand: false,
   showDeleteCommand: false,
+  hideHeader: false,
+  hourHeight: 96,
+  maxEventsPerDayCell: 3,
 })
 
 const emit = defineEmits<{
@@ -78,15 +104,43 @@ const emit = defineEmits<{
   // Fired when a right-click menu command is selected. The library performs no
   // action itself — the consumer handles the command (e.g. open its own editor).
   'command': [payload: ICalendarCommandSelect]
+  // Controlled selection: fired alongside `eventClick` when a chip is clicked, so
+  // `v-model:selected-event-id` round-trips.
+  'update:selectedEventId': [id: number | null]
+  // Fired when the month view's "+N more" is activated. Payload is `yyyy-MM-dd`.
+  // Providing a listener turns the label into a real button.
+  'showMore': [date: string]
 }>()
 
 const store = useCalendarStore()
 const instance = getCurrentInstance()
+const slots = useSlots()
 
 const mergedLabels = computed(() => ({ ...DEFAULT_LABELS, ...props.labels }))
 provide(CALENDAR_LABELS_KEY, mergedLabels)
 provide(CALENDAR_FLAGS_KEY, { showViewTooltips: computed(() => props.showViewTooltips) })
 provide(CALENDAR_DATE_LOCALE_KEY, computed(() => props.dateLocale))
+
+// Scoped slots stand in for React's render-prop renderers: `#event`,
+// `#month-event` and `#agenda-event` are threaded down through the injection so
+// deep children (EventBlock / MonthEventBadge / AgendaEventCard) can render them.
+const customization = computed<ICalendarCustomization>(() => ({
+  renderEvent: slots.event,
+  renderMonthEvent: slots['month-event'],
+  renderAgendaEvent: slots['agenda-event'],
+  selectedEventId: props.selectedEventId,
+  hourHeight: props.hourHeight,
+  height: props.height,
+  autoHeight: props.autoHeight,
+  maxEventsPerDayCell: props.maxEventsPerDayCell,
+  allDayMaxRows: props.allDayMaxRows,
+  onShowMore: hasListener('onShowMore') ? (date: string) => emit('showMore', date) : undefined,
+  classNames: props.classNames,
+  dayCellClassName: props.dayCellClassName,
+}))
+provide(CALENDAR_CUSTOMIZATION_KEY, customization)
+
+const rootClasses = computed(() => cn('overflow-hidden rounded-xl border', props.classNames?.root))
 
 const viewRef = computed(() => props.view)
 
@@ -106,6 +160,7 @@ const addEventStartTime = ref<{ hour: number; minute: number }>()
 
 function handleOpenDetails(event: IEvent) {
   emit('eventClick', event)
+  emit('update:selectedEventId', event.id)
   // Built-in read dialog is opt-out: set `open-details-on-event-click="false"`
   // to handle event clicks entirely in your own app.
   if (props.openDetailsOnEventClick) {
@@ -191,7 +246,7 @@ function handleCommandSelect(command: ICalendarCommand) {
 //  - target has commands  -> stage them and let reka-ui open + position the menu
 //  - no commands but a raw @day/eventContextMenu listener -> emit that instead
 //  - otherwise            -> block reka-ui and leave the native browser menu alone
-function hasListener(name: 'onDayContextMenu' | 'onEventContextMenu') {
+function hasListener(name: 'onDayContextMenu' | 'onEventContextMenu' | 'onShowMore') {
   return !!instance?.vnode.props?.[name]
 }
 
@@ -256,8 +311,12 @@ function handleEventUpdated(event: IEvent) {
 
 <template>
   <CalendarContextMenu :commands="menuCommands" @select="handleCommandSelect">
-    <div class="overflow-hidden rounded-xl border" @contextmenu.capture="handleContextMenu">
-      <CalendarHeader :view="view" :events="filteredEvents" :can-add="canAdd" :available-views="availableViews" :show-user-select="showUserSelect" @add-event="handleAddEvent()" @change-view="handleChangeView" />
+    <div :class="rootClasses" @contextmenu.capture="handleContextMenu">
+      <template v-if="!hideHeader">
+        <slot name="header">
+          <CalendarHeader :view="view" :events="filteredEvents" :can-add="canAdd" :available-views="availableViews" :show-user-select="showUserSelect" @add-event="handleAddEvent()" @change-view="handleChangeView" />
+        </slot>
+      </template>
 
     <CalendarMonthView
       v-if="view === 'month'"

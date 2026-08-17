@@ -36,7 +36,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { createEventSchema } from '@/calendar/schemas'
-import { useCalendarLabels } from '@/calendar/labels'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { is24HourLocale } from '@/calendar/date-format'
 
 const props = withDefaults(defineProps<{
   open: boolean
@@ -54,6 +55,7 @@ const emit = defineEmits<{
 
 const store = useCalendarStore()
 const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const schema = computed(() => createEventSchema(labels.value))
 
@@ -216,6 +218,7 @@ const EVENT_COLORS = computed(() => [
               <FormLabel>{{ labels.fieldStartDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
+                  :locale="dateLocale"
                   :model-value="value"
                   :placeholder="labels.placeholderSelectDate"
                   @update:model-value="handleChange"
@@ -231,7 +234,7 @@ const EVENT_COLORS = computed(() => [
               <FormControl>
                 <TimeInput
                   :model-value="value"
-                  :hour-cycle="12"
+                  :hour-cycle="is24HourLocale(dateLocale) ? 24 : 12"
                   @update:model-value="handleChange"
                 />
               </FormControl>
@@ -246,6 +249,7 @@ const EVENT_COLORS = computed(() => [
               <FormLabel>{{ labels.fieldEndDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
+                  :locale="dateLocale"
                   :model-value="value"
                   :placeholder="labels.placeholderSelectDate"
                   @update:model-value="handleChange"
@@ -261,7 +265,7 @@ const EVENT_COLORS = computed(() => [
               <FormControl>
                 <TimeInput
                   :model-value="value"
-                  :hour-cycle="12"
+                  :hour-cycle="is24HourLocale(dateLocale) ? 24 : 12"
                   @update:model-value="handleChange"
                 />
               </FormControl>

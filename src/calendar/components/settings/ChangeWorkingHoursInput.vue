@@ -12,10 +12,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useCalendarLabels } from '@/calendar/labels'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { is24HourLocale } from '@/calendar/date-format'
 
 const store = useCalendarStore()
 const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const DAYS_OF_WEEK = computed(() => [
   { index: 0, name: labels.value.sunday },
@@ -99,13 +101,13 @@ function handleApply() {
           <div class="flex flex-1 items-center gap-2">
             <TimeInput
               :model-value="{ hour: getHours(day.index).from, minute: 0 }"
-              :hour-cycle="12"
+              :hour-cycle="is24HourLocale(dateLocale) ? 24 : 12"
               @update:model-value="handleFromChange(day.index, $event)"
             />
             <span class="text-sm text-muted-foreground">{{ labels.to.toLowerCase() }}</span>
             <TimeInput
               :model-value="{ hour: getHours(day.index).to, minute: 0 }"
-              :hour-cycle="12"
+              :hour-cycle="is24HourLocale(dateLocale) ? 24 : 12"
               @update:model-value="handleToChange(day.index, $event)"
             />
           </div>

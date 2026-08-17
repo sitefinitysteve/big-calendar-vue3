@@ -256,13 +256,38 @@ function onCommand(p: ICalendarCommandSelect) {
 | `showUserSelect` | `boolean` | `true` | Show/hide the user/resource filter dropdown |
 | `labels` | `Partial<ICalendarLabels>` | `{}` | Override any user-facing text (see [Multilingual Labels](#multilingual-labels)) |
 | `showViewTooltips` | `boolean` | `true` | Show/hide tooltips on view toggle buttons |
-| `dateLocale` | `Locale` (date-fns) | `undefined` | date-fns locale for month/day name formatting |
+| `dateLocale` | `Locale` (date-fns) | `undefined` (en-US patterns) | Localizes every rendered date and time — month/day names **and** field order and clock convention. See [Date & time formatting](#date--time-formatting) |
 | `navigateOnDayClick` | `boolean` | `true` | When `false`, a day click emits `@day-click` instead of switching to the day view |
 | `openDetailsOnEventClick` | `boolean` | `true` | When `false`, an event click emits `@event-click` instead of opening the built-in details dialog |
 | `eventCommands` | `ICalendarCommand[]` | `[]` | Right-click menu commands for events (see [Right-click command menu](#right-click-command-menu)) |
 | `dayCommands` | `ICalendarCommand[]` | `[]` | Right-click menu commands for days (month/year) |
 | `showEditCommand` | `boolean \| TCalendarView[]` | `false` | Add a stock "Edit" command — `true` (all views) or a list of views |
 | `showDeleteCommand` | `boolean \| TCalendarView[]` | `false` | Add a stock "Delete" command — `true` (all views) or a list of views |
+| `hideHeader` | `boolean` | `false` | Hide the built-in header entirely (bring your own toolbar) |
+| `v-model:selectedEventId` | `number \| null` | `undefined` | Controlled selection; the matching chip gets `data-selected` |
+| `hourHeight` | `number` | `96` | Pixel height of one hour row in week/day views |
+| `height` | `number \| string` | stock (736px week / 800px day) | Week/day scroll-area height |
+| `autoHeight` | `boolean` | `false` | Week/day grid sizes to content instead of scrolling |
+| `maxEventsPerDayCell` | `number` | `3` | Month-view badge slots per day cell |
+| `allDayMaxRows` | `number` | uncapped | Week all-day strip: max badge rows before the strip scrolls internally |
+| `classNames` | `ICalendarClassNames` | `{}` | Extra classes for `root`, `header`, `dayCell`, `hourRow`, `eventBlock`, `timeline` |
+| `dayCellClassName` | `(date: Date) => string \| undefined` | — | Per-day extra classes for month-view cells |
+
+### Slots
+
+| Slot | Slot props | Purpose |
+|------|-----------|---------|
+| `#header` | — | Replaces the built-in header (ignored when `hide-header`) |
+| `#event` | `{ event, view, selected, badgeVariant }` | Replaces the inside of every event chip |
+| `#month-event` | same | Month-view override; falls back to `#event` |
+| `#agenda-event` | same | Agenda-view override; falls back to `#event` |
+
+### Emits (v1.2.x additions)
+
+| Emit | Payload | Fired when |
+|------|---------|-----------|
+| `@update:selectedEventId` | `number` | An event chip is clicked (pairs with `v-model:selected-event-id`) |
+| `@show-more` | `yyyy-MM-dd` | The month view's "+N more" is activated. Attaching a listener turns the label into a real button |
 
 Read-only example (all CRUD disabled):
 
@@ -278,6 +303,198 @@ Show only month and week views, no user filter:
   :available-views="['month', 'week']"
   :show-user-select="false"
 />
+
+## Date & time formatting
+
+`dateLocale` is the single option that controls how dates and times are rendered. It is optional —
+omit it and the calendar renders US English.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { BigCalendar } from 'big-calendar-vue3'
+import { frCA } from 'date-fns/locale/fr-CA'
+
+const view = ref('month')
+</script>
+
+<template>
+  <BigCalendar v-model:view="view" :date-locale="frCA" />
+</template>
+```
+
+The calendar takes the **format patterns themselves** from the locale (date-fns' `formatLong`, which
+is CLDR data), so passing a locale changes field order and clock convention, not just the words:
+
+| Surface | no locale | `enUS` | `frCA` | `ja` |
+| --- | --- | --- | --- | --- |
+| Header range, details dialog, day-view "today" chip | `Dec 1, 2026` | `Dec 1, 2026` | `1 déc. 2026` | `2026/12/01` |
+| Agenda day heading | `Tuesday, December 1, 2026` | `Tuesday, December 1st, 2026` | `mardi 1 décembre 2026` | `2026年12月1日火曜日` |
+| Event times (week/month/agenda/day) | `2:30 PM` | `2:30 PM` | `14:30` | `14:30` |
+| Day & week hour axis | `02 PM` | `02 PM` | `14` | `14` |
+| Date + time rows in the details dialog | `Dec 1, 2026 2:30 PM` | `Dec 1, 2026, 2:30 PM` | `1 déc. 2026, 14:30` | `2026/12/01 14:30` |
+
+The hour axis follows the locale's own clock: a 24-hour locale labels it `14`, a 12-hour locale
+`02 PM`, so the axis always agrees with the event times printed beside it.
+
+The Add/Edit dialogs follow the same locale — the date field's trigger label and popover are
+localized, and the time fields drop the AM/PM control for a 24-hour locale.
+
+The pattern helpers are exported for use in your own components:
+`datePattern`, `longDatePattern`, `timePattern`, `hourPattern`, `dateTimePattern`, `is24HourLocale`,
+and the formatters `formatDate`, `formatLongDate`, `formatTime`, `formatHour`, `formatDateTime`.
+
+**Known limitation:** the week grid always starts on Sunday. `dateLocale` does not yet move it, so
+locales that start the week on Monday (`de`, `en-GB`) or Saturday (`ar`) still get a Sunday-first
+grid. This is deliberate for now — the month view's weekday header is a fixed `Sun`–`Sat` label
+list, and moving one view without the other would leave the calendar disagreeing with itself.
+
+Omitting `dateLocale` is not the same as passing `enUS`. With no locale the calendar uses its
+built-in US-English patterns, which is why the two English columns above differ on the agenda
+heading (no ordinal) and the date+time row (no comma). Pass `enUS` explicitly to get true CLDR
+US-English output.
+
+> **Passing a locale is required for correct non-English output.** Without one you get English
+> field order regardless of the `labels` you supply — `labels` translates the calendar's own strings
+> (buttons, headings), while `dateLocale` governs everything date-fns renders.
+
+## Customization API (v1.2.0)
+
+All of these props and slots are optional. Omit them and the calendar renders exactly as it did in 1.1.0.
+
+### Custom event chips
+
+React's render-prop renderers become **scoped slots** here. The stock chip markup is the slot's
+fallback, so omitting a slot leaves the built-in chip untouched.
+
+```vue
+<BigCalendar v-model:view="view">
+  <template #event="{ event, view: v, selected }">
+    <MyExpandedCard v-if="selected" :event="event" />
+    <MyCompactCard v-else :event="event" :view="v" />
+  </template>
+
+  <template #month-event="{ event }">
+    <MyCompactBadge :event="event" />
+  </template>
+
+  <template #agenda-event="{ event }">
+    <MyAgendaRow :event="event" />
+  </template>
+</BigCalendar>
+```
+
+`#month-event` / `#agenda-event` fall back to `#event` when not given.
+Slot props are `{ event, view, selected, badgeVariant }`.
+
+### Selection
+
+Selection is controlled: the library stores nothing.
+
+```vue
+<script setup lang="ts">
+const selectedEventId = ref<number | null>(null)
+</script>
+
+<template>
+  <BigCalendar
+    v-model:view="view"
+    v-model:selected-event-id="selectedEventId"
+    :open-details-on-event-click="false"
+  />
+</template>
+```
+
+The matching chip gets `data-selected` (and only that one), so you can style it with
+`[&[data-selected]]:outline-2` or a plain CSS rule. A selected chip rendered through the `#event`
+slot switches from a fixed `height` to `min-height` and gains `z-10`, so it may grow past its slot.
+
+### Your own toolbar
+
+```vue
+<BigCalendar v-model:view="view" hide-header />
+
+<BigCalendar v-model:view="view">
+  <template #header><MyToolbar /></template>
+</BigCalendar>
+```
+
+`hide-header` wins when both are given.
+
+### Sizing and density
+
+| Prop / emit | Default | Effect |
+| --- | --- | --- |
+| `hourHeight` | `96` | Pixel height of one hour row in week/day views |
+| `height` | stock (736px week / 800px day) | Week/day scroll-area height |
+| `autoHeight` | `false` | Grid sizes to content instead of scrolling |
+| `maxEventsPerDayCell` | `3` | Month-view badge slots per day |
+| `@show-more` | none | Turns "+N more" into a button emitting `(yyyy-MM-dd)` |
+| `allDayMaxRows` | uncapped | Week all-day strip: max badge rows before the strip scrolls internally |
+
+The week view's all-day strip sits directly under the day-name header row (which is sticky) and
+carries a gutter label taken from the `allDay` label key (`"All day"` by default), so a translated
+calendar labels it too.
+
+### Class hooks
+
+```vue
+<BigCalendar
+  v-model:view="view"
+  :class-names="{ root, header, dayCell, hourRow, eventBlock, timeline }"
+  :day-cell-class-name="(date) => (isWeekend(date) ? 'bg-muted/40' : undefined)"
+/>
+```
+
+### Open color system
+
+`event.color` accepts the seven built-in names (`blue`, `green`, `red`, `yellow`, `purple`,
+`orange`, `gray`) or **any CSS color string**. Built-ins keep their Tailwind class maps.
+Anything else renders with the class `bc-event-custom-color` plus an inline
+`--bc-event-color` variable, and the color is derived with `color-mix()`.
+
+If you do **not** import `big-calendar-vue3/style.css`, copy these rules into your own
+stylesheet or custom colors will render unstyled:
+
+```css
+.bc-event-custom-color {
+  border-color: color-mix(in srgb, var(--bc-event-color, currentColor) 35%, transparent);
+  background-color: color-mix(in srgb, var(--bc-event-color, currentColor) 12%, transparent);
+  color: color-mix(in srgb, var(--bc-event-color, currentColor) 85%, black);
+}
+.dark .bc-event-custom-color {
+  border-color: color-mix(in srgb, var(--bc-event-color, currentColor) 45%, transparent);
+  background-color: color-mix(in srgb, var(--bc-event-color, currentColor) 22%, transparent);
+  color: color-mix(in srgb, var(--bc-event-color, currentColor) 75%, white);
+}
+.bc-event-custom-color .event-dot { fill: var(--bc-event-color, currentColor); }
+.bc-event-bullet.bc-event-custom-color {
+  background-color: var(--bc-event-color, currentColor);
+  border-color: transparent;
+}
+@media (min-width: 1024px) {
+  .bc-day-cell-list { height: var(--bc-day-cell-list-height); flex-direction: column; }
+}
+```
+
+(The last rule only matters when you set `maxEventsPerDayCell` to something other than 3.)
+
+### Typed event metadata
+
+```ts
+type TripMeta = { sourceType: 'trip' | 'client'; sourceId: number }
+const events: IEvent<TripMeta>[] = []
+```
+
+`meta` is optional and carried through untouched by the library.
+
+### Reading the customization from your own component
+
+```ts
+import { useCalendarCustomization } from 'big-calendar-vue3'
+
+const customization = useCalendarCustomization() // ComputedRef<ICalendarCustomization>
+```
 
 ## Multilingual Labels
 

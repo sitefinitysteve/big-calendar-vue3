@@ -71,7 +71,9 @@ const eventsByDay = computed<DayEntry[]>(() => {
   return Array.from(dayMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => ({
-      date: new Date(key),
+      // `parseISO` reads `yyyy-MM-dd` as LOCAL midnight; `new Date(key)` reads
+      // it as UTC and lands on the previous day west of Greenwich.
+      date: parseISO(key),
       singleDayEvents: value.singleDayEvents,
       multiDayEvents: value.multiDayEvents,
     }))

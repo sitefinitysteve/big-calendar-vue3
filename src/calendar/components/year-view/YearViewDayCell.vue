@@ -4,7 +4,7 @@ import { format, isToday } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import type { IEvent } from '@/calendar/interfaces'
-import type { TEventColor } from '@/calendar/types'
+import type { TLegacyEventColor } from '@/calendar/types'
 
 const props = defineProps<{
   day: number
@@ -20,7 +20,7 @@ const store = useCalendarStore()
 
 const maxIndicators = 3
 
-const colorMap: Record<TEventColor, string> = {
+const colorMap: Record<TLegacyEventColor, string> = {
   blue: 'bg-blue-600',
   green: 'bg-green-600',
   red: 'bg-red-600',
@@ -70,7 +70,7 @@ function handleClick() {
       <span
         v-for="(event, index) in visibleDots"
         :key="index"
-        :class="cn('size-1.5 rounded-full', colorMap[event.color])"
+        :class="cn('size-1.5 rounded-full', colorMap[event.color as TLegacyEventColor])"
       />
       <span
         v-if="overflowCount > 0"

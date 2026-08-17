@@ -7,6 +7,7 @@ import {
   parseISO,
   isSameDay,
   areIntervalsOverlapping,
+  isSameWeek,
 } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -22,9 +23,55 @@ import CalendarTimeline from '@/calendar/components/week-view/CalendarTimeline.v
 import WeekViewMultiDayEventsRow from '@/calendar/components/week-view/WeekViewMultiDayEventsRow.vue'
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { formatHour } from '@/calendar/date-format'
+import { useCalendarCustomization } from '@/calendar/customization'
+
+/** Literal (Tailwind-scannable) classes for the four 15-minute slots at 96px/hour. */
+const STOCK_SLOT_CLASSES = [
+  'absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent',
+  'absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent',
+  'absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent',
+  'absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent',
+]
 
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
+const customization = useCalendarCustomization()
+
+// Stock 96px hour keeps its literal Tailwind classes so default output is
+// byte-identical; a custom hourHeight switches to inline positioning.
+const hourHeight = computed(() => customization.value.hourHeight)
+const hourStyle = computed(() => ({ height: `${hourHeight.value}px` }))
+const scaled = computed(() => hourHeight.value !== 96)
+const quarter = computed(() => hourHeight.value / 4)
+
+function slotClass(index: number) {
+  return scaled.value
+    ? 'absolute inset-x-0 cursor-pointer transition-colors hover:bg-accent'
+    : STOCK_SLOT_CLASSES[index]
+}
+function slotStyle(index: number) {
+  return scaled.value
+    ? { top: `${quarter.value * index}px`, height: `${quarter.value}px` }
+    : undefined
+}
+
+const scrollAreaClass = computed(() =>
+  cn(customization.value.height === undefined && !customization.value.autoHeight && 'h-[736px]'),
+)
+const scrollAreaStyle = computed(() => {
+  if (customization.value.autoHeight) return undefined
+  if (customization.value.height === undefined) return undefined
+  return { height: typeof customization.value.height === 'number' ? `${customization.value.height}px` : customization.value.height }
+})
+
+function hourRowClass(day: Date, hour: number) {
+  return cn(
+    'relative',
+    !isWorkingHour(day, hour, store.workingHours) && 'bg-calendar-disabled-hour',
+    customization.value.classNames?.hourRow,
+  )
+}
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -48,6 +95,8 @@ const earliestEventHour = computed(() => visibleHoursData.value.earliestEventHou
 const latestEventHour = computed(() => visibleHoursData.value.latestEventHour)
 
 const weekStart = computed(() => startOfWeek(store.selectedDate))
+const showsToday = computed(() => isSameWeek(store.selectedDate, new Date()))
+
 const weekDays = computed(() =>
   Array.from({ length: 7 }, (_, i) => addDays(weekStart.value, i))
 )
@@ -98,7 +147,7 @@ function getEventStyle(
 }
 
 function formatHourLabel(hour: number): string {
-  return format(new Date(new Date().setHours(hour, 0, 0, 0)), 'hh a')
+  return formatHour(new Date(new Date().setHours(hour, 0, 0, 0)), dateLocale.value)
 }
 
 function handleTimeSlotClick(day: Date, hour: number, minute: number) {
@@ -116,14 +165,8 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
   <!-- Desktop week view -->
   <div class="hidden flex-col sm:flex">
     <div>
-      <WeekViewMultiDayEventsRow
-        :selected-date="store.selectedDate"
-        :multi-day-events="multiDayEvents"
-        @open-details="emit('openDetails', $event)"
-      />
-
-      <!-- Week header -->
-      <div class="relative z-20 flex border-b">
+      <!-- Week header. Sticky so the all-day strip below can scroll under it. -->
+      <div class="sticky top-0 z-20 flex border-b bg-background">
         <div class="w-18" />
         <div class="grid flex-1 grid-cols-7 divide-x border-l">
           <span
@@ -136,9 +179,15 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
           </span>
         </div>
       </div>
+
+      <WeekViewMultiDayEventsRow
+        :selected-date="store.selectedDate"
+        :multi-day-events="multiDayEvents"
+        @open-details="emit('openDetails', $event)"
+      />
     </div>
 
-    <ScrollArea class="h-[736px]" type="always">
+    <ScrollArea :class="scrollAreaClass" :style="scrollAreaStyle" type="always">
       <div class="flex overflow-hidden">
         <!-- Hours column -->
         <div class="relative w-18">
@@ -146,7 +195,7 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
             v-for="(hour, index) in hours"
             :key="hour"
             class="relative"
-            style="height: 96px"
+            :style="hourStyle"
           >
             <div class="absolute -top-3 right-2 flex h-6 items-center">
               <span v-if="index !== 0" class="text-xs text-muted-foreground">
@@ -168,11 +217,8 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
               <div
                 v-for="(hour, hourIndex) in hours"
                 :key="hour"
-                :class="cn(
-                  'relative',
-                  !isWorkingHour(day, hour, store.workingHours) && 'bg-calendar-disabled-hour',
-                )"
-                style="height: 96px"
+                :class="hourRowClass(day, hour)"
+                :style="hourStyle"
               >
                 <div
                   v-if="hourIndex !== 0"
@@ -182,11 +228,13 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
                 <!-- 4 time slots per hour (15-minute intervals) -->
                 <template v-if="canAdd !== false">
                   <div
-                    class="absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(0)"
+                    :style="slotStyle(0)"
                     @click="handleTimeSlotClick(day, hour, 0)"
                   />
                   <div
-                    class="absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(1)"
+                    :style="slotStyle(1)"
                     @click="handleTimeSlotClick(day, hour, 15)"
                   />
                 </template>
@@ -195,11 +243,13 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
 
                 <template v-if="canAdd !== false">
                   <div
-                    class="absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(2)"
+                    :style="slotStyle(2)"
                     @click="handleTimeSlotClick(day, hour, 30)"
                   />
                   <div
-                    class="absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(3)"
+                    :style="slotStyle(3)"
                     @click="handleTimeSlotClick(day, hour, 45)"
                   />
                 </template>
@@ -225,7 +275,9 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
             </div>
           </div>
 
+          <!-- The "now" line is only meaningful on a week that contains today. -->
           <CalendarTimeline
+            v-if="showsToday"
             :first-visible-hour="earliestEventHour"
             :last-visible-hour="latestEventHour"
           />

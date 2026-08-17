@@ -7,7 +7,7 @@ export interface IUser {
   picturePath: string | null
 }
 
-export interface IEvent {
+export interface IEvent<TMeta = unknown> {
   id: number
   startDate: string
   endDate: string
@@ -16,6 +16,8 @@ export interface IEvent {
   description: string
   user: IUser
   isAllDay?: boolean
+  /** Arbitrary consumer payload, carried through untouched by the library. */
+  meta?: TMeta
 }
 
 export interface ICalendarCell {

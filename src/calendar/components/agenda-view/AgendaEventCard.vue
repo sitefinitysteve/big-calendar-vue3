@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { cva } from 'class-variance-authority'
-import { format, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 import { Clock, Text, User } from 'lucide-vue-next'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import type { IEvent } from '@/calendar/interfaces'
-import { useCalendarLabels } from '@/calendar/labels'
+import type { TLegacyEventColor } from '@/calendar/types'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { formatTime } from '@/calendar/date-format'
+import { isLegacyColor, useCalendarCustomization } from '@/calendar/customization'
 
 const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const props = defineProps<{
   event: IEvent
@@ -20,6 +25,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useCalendarStore()
+const customization = useCalendarCustomization()
 
 const agendaCardVariants = cva(
   'bc-event-card flex select-none items-center justify-between gap-3 rounded-md border p-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
@@ -48,10 +54,38 @@ const agendaCardVariants = cva(
   },
 )
 
-function getColorVariant() {
-  if (store.badgeVariant === 'dot') return `${props.event.color}-dot` as const
-  return props.event.color
-}
+const renderer = computed(
+  () => customization.value.renderAgendaEvent ?? customization.value.renderEvent,
+)
+const legacy = computed(() => isLegacyColor(props.event.color))
+const selected = computed(
+  () => customization.value.selectedEventId != null && customization.value.selectedEventId === props.event.id,
+)
+
+const colorVariant = computed(() => {
+  if (!legacy.value) return undefined
+  const base = props.event.color as TLegacyEventColor
+  return store.badgeVariant === 'dot' ? (`${base}-dot` as const) : base
+})
+
+const cardClasses = computed(() =>
+  cn(
+    agendaCardVariants({ color: colorVariant.value }),
+    !legacy.value && 'bc-event-custom-color',
+    customization.value.classNames?.eventBlock,
+  ),
+)
+
+const cardStyle = computed(() =>
+  legacy.value ? undefined : ({ '--bc-event-color': props.event.color } as Record<string, string>),
+)
+
+const slotProps = computed(() => ({
+  event: props.event,
+  view: 'agenda' as const,
+  selected: selected.value,
+  badgeVariant: store.badgeVariant,
+}))
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -66,11 +100,15 @@ function handleKeyDown(e: KeyboardEvent) {
     role="button"
     tabindex="0"
     :data-event-id="event.id"
-    :class="cn(agendaCardVariants({ color: getColorVariant() }))"
+    :data-selected="selected ? '' : undefined"
+    :class="cardClasses"
+    :style="cardStyle"
     @click="emit('openDetails', event)"
     @keydown="handleKeyDown"
   >
-    <div class="flex items-center gap-3 truncate">
+    <component :is="renderer" v-if="renderer" v-bind="slotProps" />
+
+    <div v-else class="flex items-center gap-3 truncate">
       <svg
         v-if="['mixed', 'dot'].includes(store.badgeVariant)"
         width="8"
@@ -99,7 +137,7 @@ function handleKeyDown(e: KeyboardEvent) {
             <Clock class="size-3" />
             <template v-if="event.isAllDay">{{ labels.allDay }}</template>
             <template v-else>
-              {{ format(parseISO(event.startDate), 'h:mm a') }} - {{ format(parseISO(event.endDate), 'h:mm a') }}
+              {{ formatTime(parseISO(event.startDate), dateLocale) }} - {{ formatTime(parseISO(event.endDate), dateLocale) }}
             </template>
           </span>
 

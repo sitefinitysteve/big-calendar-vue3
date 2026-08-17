@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { format, parseISO, isSameDay } from 'date-fns'
+import { parseISO, isSameDay } from 'date-fns'
 import { Calendar, Clock, Text, User } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { formatDate, formatDateTime } from '@/calendar/date-format'
 
 const props = defineProps<{
   event: IEvent
@@ -29,7 +30,6 @@ const emit = defineEmits<{
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
 
-const fmtOpts = () => dateLocale.value ? { locale: dateLocale.value } : undefined
 
 const startDate = parseISO(props.event.startDate)
 const endDate = parseISO(props.event.endDate)
@@ -57,7 +57,7 @@ const endDate = parseISO(props.event.endDate)
             <Calendar class="mt-1 size-4 shrink-0" />
             <div>
               <p class="text-sm font-medium">{{ labels.fieldDate }}</p>
-              <p class="text-sm text-muted-foreground">{{ format(startDate, 'MMM d, yyyy', fmtOpts()) }} ({{ labels.allDay }})</p>
+              <p class="text-sm text-muted-foreground">{{ formatDate(startDate, dateLocale) }} ({{ labels.allDay }})</p>
             </div>
           </div>
         </template>
@@ -67,7 +67,7 @@ const endDate = parseISO(props.event.endDate)
             <Calendar class="mt-1 size-4 shrink-0" />
             <div>
               <p class="text-sm font-medium">{{ labels.fieldStartDate }}</p>
-              <p class="text-sm text-muted-foreground">{{ format(startDate, 'MMM d, yyyy', fmtOpts()) }}</p>
+              <p class="text-sm text-muted-foreground">{{ formatDate(startDate, dateLocale) }}</p>
             </div>
           </div>
 
@@ -75,7 +75,7 @@ const endDate = parseISO(props.event.endDate)
             <Clock class="mt-1 size-4 shrink-0" />
             <div>
               <p class="text-sm font-medium">{{ labels.fieldEndDate }}</p>
-              <p class="text-sm text-muted-foreground">{{ format(endDate, 'MMM d, yyyy', fmtOpts()) }}</p>
+              <p class="text-sm text-muted-foreground">{{ formatDate(endDate, dateLocale) }}</p>
             </div>
           </div>
         </template>
@@ -85,7 +85,7 @@ const endDate = parseISO(props.event.endDate)
             <Calendar class="mt-1 size-4 shrink-0" />
             <div>
               <p class="text-sm font-medium">{{ labels.fieldStartDate }}</p>
-              <p class="text-sm text-muted-foreground">{{ format(startDate, 'MMM d, yyyy h:mm a', fmtOpts()) }}</p>
+              <p class="text-sm text-muted-foreground">{{ formatDateTime(startDate, dateLocale) }}</p>
             </div>
           </div>
 
@@ -93,7 +93,7 @@ const endDate = parseISO(props.event.endDate)
             <Clock class="mt-1 size-4 shrink-0" />
             <div>
               <p class="text-sm font-medium">{{ labels.fieldEndDate }}</p>
-              <p class="text-sm text-muted-foreground">{{ format(endDate, 'MMM d, yyyy h:mm a', fmtOpts()) }}</p>
+              <p class="text-sm text-muted-foreground">{{ formatDateTime(endDate, dateLocale) }}</p>
             </div>
           </div>
         </template>

@@ -5,10 +5,16 @@ import { calculateMonthEventPositions } from '@/calendar/helpers'
 export function useEventPositioning(
   multiDayEvents: Ref<IEvent[]>,
   singleDayEvents: Ref<IEvent[]>,
-  selectedDate: Ref<Date>
+  selectedDate: Ref<Date>,
+  maxVisible: Ref<number> | number = 3
 ) {
   const eventPositions = computed(() =>
-    calculateMonthEventPositions(multiDayEvents.value, singleDayEvents.value, selectedDate.value)
+    calculateMonthEventPositions(
+      multiDayEvents.value,
+      singleDayEvents.value,
+      selectedDate.value,
+      typeof maxVisible === 'number' ? maxVisible : maxVisible.value,
+    )
   )
   return { eventPositions }
 }

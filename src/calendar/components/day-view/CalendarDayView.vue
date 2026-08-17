@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { format, parseISO, areIntervalsOverlapping } from 'date-fns'
+import { format, parseISO, areIntervalsOverlapping, isToday } from 'date-fns'
 import { CalendarDate } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { Calendar as CalendarIcon, Clock, User } from 'lucide-vue-next'
@@ -24,9 +24,59 @@ import DayViewMultiDayEventsRow from '@/calendar/components/day-view/DayViewMult
 
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { useCalendarCustomization } from '@/calendar/customization'
+import {
+  formatDate as fmtDate,
+  formatHour as fmtHour,
+  formatTime as fmtTime,
+} from '@/calendar/date-format'
+
+/** Literal (Tailwind-scannable) classes for the four 15-minute slots at 96px/hour. */
+const STOCK_SLOT_CLASSES = [
+  'absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent',
+  'absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent',
+  'absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent',
+  'absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent',
+]
 
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
+const customization = useCalendarCustomization()
+
+// Stock 96px hour keeps its literal Tailwind classes so default output is
+// byte-identical; a custom hourHeight switches to inline positioning.
+const hourHeight = computed(() => customization.value.hourHeight)
+const hourStyle = computed(() => ({ height: `${hourHeight.value}px` }))
+const scaled = computed(() => hourHeight.value !== 96)
+const quarter = computed(() => hourHeight.value / 4)
+
+function slotClass(index: number) {
+  return scaled.value
+    ? 'absolute inset-x-0 cursor-pointer transition-colors hover:bg-accent'
+    : STOCK_SLOT_CLASSES[index]
+}
+function slotStyle(index: number) {
+  return scaled.value
+    ? { top: `${quarter.value * index}px`, height: `${quarter.value}px` }
+    : undefined
+}
+
+const scrollAreaClass = computed(() =>
+  cn(customization.value.height === undefined && !customization.value.autoHeight && 'h-[800px]'),
+)
+const scrollAreaStyle = computed(() => {
+  const h = customization.value.height
+  if (customization.value.autoHeight || h === undefined) return undefined
+  return { height: typeof h === 'number' ? `${h}px` : h }
+})
+
+function hourRowClass(hour: number) {
+  return cn(
+    'relative',
+    !isWorkingHour(selectedDate.value, hour, workingHours.value) && 'bg-calendar-disabled-hour',
+    customization.value.classNames?.hourRow,
+  )
+}
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -77,7 +127,7 @@ function handleCalendarSelect(value: DateValue | undefined) {
 }
 
 function formatHour(hour: number): string {
-  return format(new Date(2000, 0, 1, hour, 0, 0, 0), 'hh a')
+  return fmtHour(new Date(2000, 0, 1, hour, 0, 0, 0), dateLocale.value)
 }
 
 function getEventStyle(event: IEvent, groupIndex: number) {
@@ -129,7 +179,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
         </div>
       </div>
 
-      <ScrollArea class="h-[800px]">
+      <ScrollArea :class="scrollAreaClass" :style="scrollAreaStyle">
         <div class="flex">
           <!-- Hours column -->
           <div class="relative w-18">
@@ -137,7 +187,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
               v-for="(hour, index) in hours"
               :key="hour"
               class="relative"
-              :style="{ height: '96px' }"
+              :style="hourStyle"
             >
               <div class="absolute -top-3 right-2 flex h-6 items-center">
                 <span v-if="index !== 0" class="text-xs text-muted-foreground">
@@ -153,11 +203,8 @@ function getEventStyle(event: IEvent, groupIndex: number) {
               <div
                 v-for="(hour, index) in hours"
                 :key="hour"
-                :class="cn(
-                  'relative',
-                  !isWorkingHour(selectedDate, hour, workingHours) && 'bg-calendar-disabled-hour',
-                )"
-                :style="{ height: '96px' }"
+                :class="hourRowClass(hour)"
+                :style="hourStyle"
               >
                 <div
                   v-if="index !== 0"
@@ -167,11 +214,13 @@ function getEventStyle(event: IEvent, groupIndex: number) {
                 <!-- 4 clickable time slots per hour -->
                 <template v-if="canAdd !== false">
                   <div
-                    class="absolute inset-x-0 top-0 h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(0)"
+                    :style="slotStyle(0)"
                     @click="emit('addEvent', selectedDate, { hour, minute: 0 })"
                   />
                   <div
-                    class="absolute inset-x-0 top-[24px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(1)"
+                    :style="slotStyle(1)"
                     @click="emit('addEvent', selectedDate, { hour, minute: 15 })"
                   />
                 </template>
@@ -180,11 +229,13 @@ function getEventStyle(event: IEvent, groupIndex: number) {
 
                 <template v-if="canAdd !== false">
                   <div
-                    class="absolute inset-x-0 top-[48px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(2)"
+                    :style="slotStyle(2)"
                     @click="emit('addEvent', selectedDate, { hour, minute: 30 })"
                   />
                   <div
-                    class="absolute inset-x-0 top-[72px] h-[24px] cursor-pointer transition-colors hover:bg-accent"
+                    :class="slotClass(3)"
+                    :style="slotStyle(3)"
                     @click="emit('addEvent', selectedDate, { hour, minute: 45 })"
                   />
                 </template>
@@ -203,13 +254,16 @@ function getEventStyle(event: IEvent, groupIndex: number) {
                 >
                   <EventBlock
                     :event="event"
+                    view="day"
                     @open-details="emit('openDetails', $event)"
                   />
                 </div>
               </template>
             </div>
 
+            <!-- The "now" line is only meaningful when the shown day IS today. -->
             <CalendarTimeline
+              v-if="isToday(selectedDate)"
               :first-visible-hour="earliestEventHour"
               :last-visible-hour="latestEventHour"
             />
@@ -258,7 +312,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
 
                 <div class="flex items-center gap-1.5 text-muted-foreground">
                   <CalendarIcon class="size-3.5" />
-                  <span class="text-sm">{{ format(new Date(), 'MMM d, yyyy', dateLocale ? { locale: dateLocale } : undefined) }}</span>
+                  <span class="text-sm">{{ fmtDate(new Date(), dateLocale) }}</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 text-muted-foreground">
@@ -266,7 +320,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
                   <span class="text-sm">
                     <template v-if="event.isAllDay">{{ labels.allDay }}</template>
                     <template v-else>
-                      {{ format(parseISO(event.startDate), 'h:mm a') }} - {{ format(parseISO(event.endDate), 'h:mm a') }}
+                      {{ fmtTime(parseISO(event.startDate), dateLocale) }} - {{ fmtTime(parseISO(event.endDate), dateLocale) }}
                     </template>
                   </span>
                 </div>

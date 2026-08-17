@@ -16,7 +16,13 @@ npm run dev          # Start dev server (Vite)
 npm run build        # Type-check (vue-tsc) then build
 npm run preview      # Preview production build
 npx vue-tsc --noEmit # Type-check only
+npm run test         # Run the vitest suite once (vitest + @vue/test-utils + jsdom)
+npm run test:watch   # Watch mode
 ```
+
+Tests live in `src/calendar/__tests__/*.test.ts` and are excluded from `tsconfig.app.json`.
+`vitest.config.ts` pins `TZ=America/Toronto` on purpose — UTC-negative, so `new Date('yyyy-MM-dd')`
+off-by-one bugs surface.
 
 ## Tech Stack
 
@@ -45,7 +51,9 @@ src/
 │   │   ├── dialogs/             # EventDetailsDialog, EditEventDialog, AddEventDialog
 │   │   └── settings/            # BadgeVariant, VisibleHours, WorkingHours inputs
 │   ├── composables/             # Vue composables for calendar logic
-│   ├── types.ts                 # Type aliases (TCalendarView, TEventColor, etc.)
+│   ├── types.ts                 # Type aliases (TCalendarView, TEventColor, TLegacyEventColor, etc.)
+│   ├── date-format.ts           # Locale-derived date/time patterns (pure TS, no Vue)
+│   ├── customization.ts         # ICalendarCustomization, injection key, useCalendarCustomization()
 │   ├── interfaces.ts            # Interfaces (IEvent, IUser, ICalendarCell)
 │   ├── helpers.ts               # Pure utility functions (no Vue dependency)
 │   ├── labels.ts                # ICalendarLabels interface, DEFAULT_LABELS, injection keys
@@ -106,6 +114,8 @@ src/
 - CalendarContainer emits `@day-click` (payload: `yyyy-MM-dd` string, built with date-fns `format` so it is UTC-safe) when a day is clicked in month/year views, and `@event-click` (payload: `IEvent`) when an event chip is clicked in any view — for host apps that drive their own dialogs/routing
 - CalendarContainer emits `@day-context-menu` and `@event-context-menu` on right-click (payload: `{ date | event, x, y, originalEvent }`) — handled via a single delegated `@contextmenu` listener on the calendar root that reads `data-date` (day cells) / `data-event-id` (event chips); the native browser menu is suppressed only when a listener is attached (detected via `getCurrentInstance().vnode.props`)
 - CalendarContainer accepts `availableViews` (restrict visible view buttons), `showUserSelect` (toggle user dropdown), `labels` (Partial<ICalendarLabels>), and `showViewTooltips` props
+- CalendarContainer accepts the v1.2.x customization props: `hideHeader`, `selectedEventId` (with `v-model:selected-event-id` via `@update:selectedEventId`), `hourHeight` (default 96), `height`, `autoHeight`, `maxEventsPerDayCell` (default 3), `allDayMaxRows`, `classNames`, `dayCellClassName`; and emits `@show-more` (payload `yyyy-MM-dd`) — attaching a listener turns the month view's "+N more" label into a real button
+- CalendarContainer exposes scoped slots `#header`, `#event`, `#month-event`, `#agenda-event`. The event slots receive `{ event, view, selected, badgeVariant }` and are threaded to deep children (EventBlock / MonthEventBadge / AgendaEventCard) through the customization injection. These replace React's `renderEvent` render props; the stock chip markup is the fallback when a slot is absent
 - CalendarContainer accepts `navigateOnDayClick` (default `true`; set `false` so a day click only emits `@day-click` instead of switching to day view) and `openDetailsOnEventClick` (default `true`; set `false` so an event click only emits `@event-click` instead of opening the built-in details dialog) — together these enable a fully "events-only" integration
 
 ### Routing
@@ -119,6 +129,20 @@ src/
 - CSS entry: `src/calendar-lib.css` — Tailwind + CSS variable defaults in `@layer big-calendar-base`
 - Vite lib config: `vite.config.lib.ts` — ESM output, externalizes peer deps, bundles shadcn-vue components
 - Build command: `npm run build:lib` → `dist/big-calendar-vue3.js`, `dist/style.css`, `dist/index.d.ts`
+
+### Date & Time Formatting
+- Never hardcode `'MMM d, yyyy'`, `'h:mm a'`, `'EEEE, MMMM d, yyyy'` or `'hh a'` — use the helpers in `@/calendar/date-format`
+- `formatDate`, `formatLongDate`, `formatTime`, `formatHour`, `formatDateTime` each take `(date, locale?)`
+- The locale comes from `useDateLocale()` — a `ComputedRef<Locale | undefined>`; use `.value` in `<script setup>`, plain in `<template>`
+- `is24HourLocale(locale)` drives `TimeInput`'s `hourCycle` so the inputs match the read-only labels
+- Patterns are read from `locale.formatLong` (CLDR), so field ORDER and clock convention follow the locale; with no locale the previously-hardcoded en-US patterns are used verbatim
+
+### Customization API
+- `useCalendarCustomization()` returns a `ComputedRef<ICalendarCustomization>`, provided by CalendarContainer via `CALENDAR_CUSTOMIZATION_KEY` — same provide/inject shape as `useCalendarLabels()`
+- Falls back to `DEFAULT_CUSTOMIZATION` (`hourHeight: 96`, `maxEventsPerDayCell: 3`) so standalone-exported views keep v1.1.0 behavior
+- `TEventColor` is an open union (`TLegacyEventColor | (string & {})`). Use `isLegacyColor()` before indexing any Tailwind class map; non-legacy colors render with `.bc-event-custom-color` + an inline `--bc-event-color`
+- The custom-color CSS lives in both `src/calendar-lib.css` and `src/assets/styles/globals.css` — keep the two blocks in sync
+- Default output must stay byte-identical when no customization props are set (the week/day 15-minute slots keep literal Tailwind classes at the stock 96px hour and only switch to inline positioning when `hourHeight` differs)
 
 ### Multilingual Labels
 - All user-facing text uses the label system — no hardcoded strings in calendar components

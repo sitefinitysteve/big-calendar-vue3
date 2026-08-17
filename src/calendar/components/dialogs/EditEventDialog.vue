@@ -37,7 +37,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { createEventSchema } from '@/calendar/schemas'
-import { useCalendarLabels } from '@/calendar/labels'
+import type { TEventFormData } from '@/calendar/schemas'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { is24HourLocale } from '@/calendar/date-format'
 import type { IEvent } from '@/calendar/interfaces'
 
 const props = defineProps<{
@@ -53,6 +55,7 @@ const emit = defineEmits<{
 const store = useCalendarStore()
 const { updateEvent } = useUpdateEvent()
 const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const schema = computed(() => createEventSchema(labels.value))
 
@@ -69,7 +72,10 @@ function buildFormValues(event: IEvent) {
     startTime: allDay ? undefined : { hour: sp.getHours(), minute: sp.getMinutes() },
     endDate: ep,
     endTime: allDay ? undefined : { hour: ep.getHours(), minute: ep.getMinutes() },
-    color: event.color,
+    // The picker only offers the seven legacy names, but a v1.2.0 custom CSS
+    // color must survive an untouched save — so the value is carried through
+    // rather than narrowed away.
+    color: event.color as TEventFormData['color'],
   }
 }
 
@@ -217,6 +223,7 @@ const EVENT_COLORS = computed(() => [
               <FormLabel>{{ labels.fieldStartDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
+                  :locale="dateLocale"
                   :model-value="value"
                   :placeholder="labels.placeholderSelectDate"
                   @update:model-value="handleChange"
@@ -232,7 +239,7 @@ const EVENT_COLORS = computed(() => [
               <FormControl>
                 <TimeInput
                   :model-value="value"
-                  :hour-cycle="12"
+                  :hour-cycle="is24HourLocale(dateLocale) ? 24 : 12"
                   @update:model-value="handleChange"
                 />
               </FormControl>
@@ -247,6 +254,7 @@ const EVENT_COLORS = computed(() => [
               <FormLabel>{{ labels.fieldEndDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
+                  :locale="dateLocale"
                   :model-value="value"
                   :placeholder="labels.placeholderSelectDate"
                   @update:model-value="handleChange"
@@ -262,7 +270,7 @@ const EVENT_COLORS = computed(() => [
               <FormControl>
                 <TimeInput
                   :model-value="value"
-                  :hour-cycle="12"
+                  :hour-cycle="is24HourLocale(dateLocale) ? 24 : 12"
                   @update:model-value="handleChange"
                 />
               </FormControl>

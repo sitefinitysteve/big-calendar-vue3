@@ -111,3 +111,39 @@ body {
 @utility bg-calendar-disabled-hour {
   background-image: repeating-linear-gradient(-60deg, hsl(var(--border)) 0 0.5px, transparent 0.5px 8px);
 }
+
+/*
+ * Open color system (v1.2.0). Events whose `color` is not one of the seven
+ * legacy names render with `.bc-event-custom-color` + an inline
+ * `--bc-event-color` CSS variable. Consumers who do NOT import
+ * `big-calendar-vue3/style.css` must copy these rules into their own stylesheet.
+ */
+.bc-event-custom-color {
+  --bc-event-color-fallback: currentColor;
+  border-color: color-mix(in srgb, var(--bc-event-color, currentColor) 35%, transparent);
+  background-color: color-mix(in srgb, var(--bc-event-color, currentColor) 12%, transparent);
+  color: color-mix(in srgb, var(--bc-event-color, currentColor) 85%, black);
+}
+
+.dark .bc-event-custom-color {
+  border-color: color-mix(in srgb, var(--bc-event-color, currentColor) 45%, transparent);
+  background-color: color-mix(in srgb, var(--bc-event-color, currentColor) 22%, transparent);
+  color: color-mix(in srgb, var(--bc-event-color, currentColor) 75%, white);
+}
+
+.bc-event-custom-color .event-dot {
+  fill: var(--bc-event-color, currentColor);
+}
+
+.bc-event-bullet.bc-event-custom-color {
+  background-color: var(--bc-event-color, currentColor);
+  border-color: transparent;
+}
+
+/* Month day-cell list height when `maxEventsPerDayCell` is not the default 3. */
+@media (min-width: 1024px) {
+  .bc-day-cell-list {
+    height: var(--bc-day-cell-list-height);
+    flex-direction: column;
+  }
+}

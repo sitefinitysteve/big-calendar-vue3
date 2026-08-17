@@ -1,21 +1,32 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cva } from 'class-variance-authority'
-import { format, differenceInMinutes, parseISO } from 'date-fns'
+import { differenceInMinutes, parseISO } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import type { IEvent } from '@/calendar/interfaces'
+import type { TLegacyEventColor } from '@/calendar/types'
+import { useDateLocale } from '@/calendar/labels'
+import { formatTime } from '@/calendar/date-format'
+import { isLegacyColor, useCalendarCustomization } from '@/calendar/customization'
+import type { TEventRenderView } from '@/calendar/customization'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   event: IEvent
   class?: string
-}>()
+  /** Which grid this block sits in — only affects the slot props. */
+  view?: TEventRenderView
+}>(), {
+  view: 'week',
+})
 
 const emit = defineEmits<{
   openDetails: [event: IEvent]
 }>()
 
 const store = useCalendarStore()
+const dateLocale = useDateLocale()
+const customization = useCalendarCustomization()
 
 const calendarWeekEventCardVariants = cva(
   'bc-event-block flex select-none flex-col gap-0.5 truncate whitespace-nowrap rounded-md border px-2 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
@@ -47,21 +58,59 @@ const calendarWeekEventCardVariants = cva(
 const start = computed(() => parseISO(props.event.startDate))
 const end = computed(() => parseISO(props.event.endDate))
 const durationInMinutes = computed(() => differenceInMinutes(end.value, start.value))
-const heightInPixels = computed(() => (durationInMinutes.value / 60) * 96 - 8)
+const heightInPixels = computed(
+  () => (durationInMinutes.value / 60) * customization.value.hourHeight - 8,
+)
+
+const legacy = computed(() => isLegacyColor(props.event.color))
+const selected = computed(
+  () => customization.value.selectedEventId != null && customization.value.selectedEventId === props.event.id,
+)
+const renderer = computed(() => customization.value.renderEvent)
+const custom = computed(() => !!renderer.value)
 
 const color = computed(() => {
-  return store.badgeVariant === 'dot'
-    ? (`${props.event.color}-dot` as const)
-    : props.event.color
+  if (!legacy.value) return undefined
+  const base = props.event.color as TLegacyEventColor
+  return store.badgeVariant === 'dot' ? (`${base}-dot` as const) : base
+})
+
+// A custom renderer owns its own layout, so the single-line clamp is dropped
+// (tailwind-merge cannot cancel `truncate`, hence the token filter).
+const variantClasses = computed(() => {
+  const classes = calendarWeekEventCardVariants({ color: color.value })
+  if (!custom.value) return classes
+  return classes
+    .split(' ')
+    .filter((token) => token !== 'truncate' && token !== 'whitespace-nowrap')
+    .join(' ')
 })
 
 const cardClasses = computed(() =>
   cn(
-    calendarWeekEventCardVariants({ color: color.value }),
+    variantClasses.value,
     durationInMinutes.value < 35 && 'py-0 justify-center',
+    !legacy.value && 'bc-event-custom-color',
+    custom.value && selected.value && 'z-10',
+    customization.value.classNames?.eventBlock,
     props.class,
   )
 )
+
+// Selected custom cards use min-height so they can expand in place.
+const cardStyle = computed(() => {
+  const size = custom.value && selected.value
+    ? { minHeight: `${heightInPixels.value}px` }
+    : { height: `${heightInPixels.value}px` }
+  return legacy.value ? size : { ...size, '--bc-event-color': props.event.color }
+})
+
+const slotProps = computed(() => ({
+  event: props.event,
+  view: props.view,
+  selected: selected.value,
+  badgeVariant: store.badgeVariant,
+}))
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -76,11 +125,15 @@ function handleKeyDown(e: KeyboardEvent) {
     role="button"
     tabindex="0"
     :data-event-id="event.id"
+    :data-selected="selected ? '' : undefined"
     :class="cardClasses"
-    :style="{ height: `${heightInPixels}px` }"
+    :style="cardStyle"
     @keydown="handleKeyDown"
     @click="emit('openDetails', event)"
   >
+    <component :is="renderer" v-if="renderer" v-bind="slotProps" />
+
+    <template v-else>
     <div class="flex items-center gap-1.5 truncate">
       <svg
         v-if="['mixed', 'dot'].includes(store.badgeVariant)"
@@ -96,7 +149,8 @@ function handleKeyDown(e: KeyboardEvent) {
     </div>
 
     <p v-if="durationInMinutes > 25 && !event.isAllDay">
-      {{ format(start, 'h:mm a') }} - {{ format(end, 'h:mm a') }}
+      {{ formatTime(start, dateLocale) }} - {{ formatTime(end, dateLocale) }}
     </p>
+    </template>
   </div>
 </template>

@@ -10,8 +10,17 @@ import {
   isBefore,
   isAfter,
 } from 'date-fns'
+import { cn } from '@/lib/utils'
 import MonthEventBadge from '@/calendar/components/month-view/MonthEventBadge.vue'
 import type { IEvent } from '@/calendar/interfaces'
+import { useCalendarLabels } from '@/calendar/labels'
+import { useCalendarCustomization } from '@/calendar/customization'
+
+/** One badge row: `h-6.5` (26px) plus the `gap-1` (4px) that follows it. */
+const ALL_DAY_ROW_HEIGHT = 26
+const ALL_DAY_ROW_GAP = 4
+/** The strip's own `py-1`. */
+const ALL_DAY_ROW_PADDING = 8
 
 const props = defineProps<{
   selectedDate: Date
@@ -21,6 +30,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   openDetails: [event: IEvent]
 }>()
+
+const labels = useCalendarLabels()
+const customization = useCalendarCustomization()
 
 const weekStart = computed(() => startOfWeek(props.selectedDate))
 const weekEnd = computed(() => endOfWeek(props.selectedDate))
@@ -90,6 +102,22 @@ const hasEventsInWeek = computed(() => {
   })
 })
 
+// When capped, the strip scrolls internally instead of pushing the grid down.
+const allDayMaxRows = computed(() => customization.value.allDayMaxRows)
+const capped = computed(
+  () => allDayMaxRows.value !== undefined && eventRows.value.length > allDayMaxRows.value,
+)
+const stripClasses = computed(() =>
+  cn('grid flex-1 grid-cols-7 divide-x border-b border-l', capped.value && 'overflow-y-auto'),
+)
+const stripStyle = computed(() => {
+  if (!capped.value) return undefined
+  const rows = allDayMaxRows.value!
+  return {
+    maxHeight: `${rows * ALL_DAY_ROW_HEIGHT + (rows - 1) * ALL_DAY_ROW_GAP + ALL_DAY_ROW_PADDING}px`,
+  }
+})
+
 function getPosition(dayIndex: number, event: ProcessedEvent): 'first' | 'middle' | 'last' | 'none' {
   if (dayIndex === event.startIndex && dayIndex === event.endIndex) return 'none'
   if (dayIndex === event.startIndex) return 'first'
@@ -99,9 +127,11 @@ function getPosition(dayIndex: number, event: ProcessedEvent): 'first' | 'middle
 </script>
 
 <template>
-  <div v-if="hasEventsInWeek" class="hidden overflow-hidden sm:flex">
-    <div class="w-18 border-b" />
-    <div class="grid flex-1 grid-cols-7 divide-x border-b border-l">
+  <div v-if="hasEventsInWeek" class="hidden sm:flex">
+    <div class="flex w-18 shrink-0 items-start justify-end border-b py-1 pr-2 text-xs text-muted-foreground">
+      {{ labels.allDay }}
+    </div>
+    <div data-all-day-strip="" :class="stripClasses" :style="stripStyle">
       <div
         v-for="(day, dayIndex) in weekDays"
         :key="day.toISOString()"

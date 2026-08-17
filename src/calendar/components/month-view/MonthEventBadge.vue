@@ -1,12 +1,17 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { cva } from 'class-variance-authority'
-import { endOfDay, format, isSameDay, parseISO, startOfDay } from 'date-fns'
+import { endOfDay, isSameDay, parseISO, startOfDay } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
 import { cn } from '@/lib/utils'
 import type { IEvent } from '@/calendar/interfaces'
-import { useCalendarLabels } from '@/calendar/labels'
+import type { TLegacyEventColor } from '@/calendar/types'
+import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { formatTime } from '@/calendar/date-format'
+import { isLegacyColor, useCalendarCustomization } from '@/calendar/customization'
 
 const labels = useCalendarLabels()
+const dateLocale = useDateLocale()
 
 const props = defineProps<{
   event: IEvent
@@ -22,6 +27,8 @@ const emit = defineEmits<{
 }>()
 
 const store = useCalendarStore()
+const customization = useCalendarCustomization()
+const renderer = computed(() => customization.value.renderMonthEvent ?? customization.value.renderEvent)
 
 const eventBadgeVariants = cva(
   'bc-event-badge mx-1 flex size-auto h-6.5 select-none items-center justify-between gap-1.5 truncate whitespace-nowrap rounded-md border px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
@@ -75,6 +82,39 @@ function isVisible(): boolean {
   return !(props.cellDate < itemStart || props.cellDate > itemEnd)
 }
 
+const legacy = computed(() => isLegacyColor(props.event.color))
+const selected = computed(
+  () => customization.value.selectedEventId != null && customization.value.selectedEventId === props.event.id,
+)
+const legacyColor = computed(() => {
+  if (!legacy.value) return undefined
+  const base = props.event.color as TLegacyEventColor
+  return store.badgeVariant === 'dot' ? (`${base}-dot` as const) : base
+})
+
+const badgeClasses = computed(() =>
+  cn(
+    eventBadgeVariants({
+      color: legacyColor.value,
+      multiDayPosition: getPosition(),
+    }),
+    !legacy.value && 'bc-event-custom-color',
+    customization.value.classNames?.eventBlock,
+    props.class,
+  ),
+)
+
+const badgeStyle = computed(() =>
+  legacy.value ? undefined : ({ '--bc-event-color': props.event.color } as Record<string, string>),
+)
+
+const slotProps = computed(() => ({
+  event: props.event,
+  view: 'month' as const,
+  selected: selected.value,
+  badgeVariant: store.badgeVariant,
+}))
+
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault()
@@ -89,16 +129,15 @@ function handleKeyDown(e: KeyboardEvent) {
     role="button"
     tabindex="0"
     :data-event-id="event.id"
-    :class="cn(
-      eventBadgeVariants({
-        color: store.badgeVariant === 'dot' ? `${event.color}-dot` : event.color,
-        multiDayPosition: getPosition(),
-      }),
-      $props.class,
-    )"
+    :data-selected="selected ? '' : undefined"
+    :class="badgeClasses"
+    :style="badgeStyle"
     @keydown="handleKeyDown"
     @click="emit('openDetails', event)"
   >
+    <component :is="renderer" v-if="renderer" v-bind="slotProps" />
+
+    <template v-else>
     <div class="flex items-center gap-1.5 truncate">
       <svg
         v-if="!['middle', 'last'].includes(getPosition()) && ['mixed', 'dot'].includes(store.badgeVariant)"
@@ -118,8 +157,9 @@ function handleKeyDown(e: KeyboardEvent) {
       </p>
     </div>
 
-    <span v-if="['first', 'none'].includes(getPosition()) && !event.isAllDay">
-      {{ format(new Date(event.startDate), 'h:mm a') }}
-    </span>
+      <span v-if="['first', 'none'].includes(getPosition()) && !event.isAllDay">
+        {{ formatTime(new Date(event.startDate), dateLocale) }}
+      </span>
+    </template>
   </div>
 </template>

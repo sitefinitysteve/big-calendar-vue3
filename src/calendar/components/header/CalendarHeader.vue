@@ -14,6 +14,8 @@ import DateNavigator from '@/calendar/components/header/DateNavigator.vue'
 import type { IEvent } from '@/calendar/interfaces'
 import type { TCalendarView } from '@/calendar/types'
 import { useCalendarLabels, useCalendarFlags } from '@/calendar/labels'
+import { useCalendarCustomization } from '@/calendar/customization'
+import { cn } from '@/lib/utils'
 
 const props = withDefaults(defineProps<{
   view: TCalendarView
@@ -53,10 +55,18 @@ const visibleViewButtons = computed(() => {
     return { ...btn, roundedClass }
   })
 })
+
+const customization = useCalendarCustomization()
+const headerClasses = computed(() =>
+  cn(
+    'bc-header flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between',
+    customization.value.classNames?.header,
+  ),
+)
 </script>
 
 <template>
-  <div class="bc-header flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
+  <div :class="headerClasses">
     <div class="flex items-center gap-3">
       <TodayButton />
       <DateNavigator :view="view" :events="events" />

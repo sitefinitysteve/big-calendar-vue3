@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { format } from 'date-fns'
+import type { Locale } from 'date-fns'
 import { CalendarDate } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { useDisclosure } from '@/calendar/composables/useDisclosure'
@@ -13,6 +14,12 @@ const props = withDefaults(defineProps<{
   modelValue?: Date
   placeholder?: string
   labelVariant?: 'P' | 'PP' | 'PPP'
+  /**
+   * date-fns locale for the trigger label and the popover's month/day names.
+   * `labelVariant` is a localized-format token, so it resolves through the
+   * locale's own `formatLong` — without one it silently renders US English.
+   */
+  locale?: Locale
   class?: string
   id?: string
 }>(), {
@@ -54,7 +61,7 @@ function handleSelect(value: DateValue | undefined) {
         variant="outline"
         :class="cn('group relative h-9 w-full justify-start whitespace-nowrap px-3 py-2 font-normal hover:bg-inherit', $props.class)"
       >
-        <span v-if="modelValue">{{ format(modelValue, labelVariant) }}</span>
+        <span v-if="modelValue">{{ format(modelValue, labelVariant, locale ? { locale } : undefined) }}</span>
         <span v-else class="text-muted-foreground">{{ placeholder }}</span>
       </Button>
     </PopoverTrigger>
@@ -62,6 +69,8 @@ function handleSelect(value: DateValue | undefined) {
     <PopoverContent align="center" class="w-fit p-0">
       <Calendar
         :model-value="calendarValue"
+        :locale="locale?.code"
+        :week-starts-on="0"
         @update:model-value="handleSelect"
       />
     </PopoverContent>

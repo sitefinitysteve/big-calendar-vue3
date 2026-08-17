@@ -38,8 +38,46 @@ export {
 } from '@/calendar/helpers'
 
 // Types & Interfaces
-export type { TCalendarView, TEventColor, TBadgeVariant, TWorkingHours, TVisibleHours } from '@/calendar/types'
+export type {
+  TCalendarView,
+  TEventColor,
+  TLegacyEventColor,
+  TBadgeVariant,
+  TWorkingHours,
+  TVisibleHours,
+} from '@/calendar/types'
 export type { IEvent, IUser, ICalendarCell, ICalendarCommand, ICalendarCommandSelect } from '@/calendar/interfaces'
+
+// Customization (v1.2.0)
+export {
+  CALENDAR_CUSTOMIZATION_KEY,
+  useCalendarCustomization,
+  isLegacyColor,
+  LEGACY_EVENT_COLORS,
+  DEFAULT_CUSTOMIZATION,
+} from '@/calendar/customization'
+export type {
+  TEventRenderer,
+  TEventRenderView,
+  IEventSlotProps,
+  ICalendarClassNames,
+  ICalendarCustomization,
+} from '@/calendar/customization'
+
+// Date formatting (v1.2.0)
+export {
+  datePattern,
+  longDatePattern,
+  timePattern,
+  hourPattern,
+  dateTimePattern,
+  is24HourLocale,
+  formatDate,
+  formatLongDate,
+  formatTime,
+  formatHour,
+  formatDateTime,
+} from '@/calendar/date-format'
 
 // Labels
 export type { ICalendarLabels } from '@/calendar/labels'

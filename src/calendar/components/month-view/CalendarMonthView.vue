@@ -6,8 +6,10 @@ import { useEventPositioning } from '@/calendar/composables/useEventPositioning'
 import DayCell from '@/calendar/components/month-view/DayCell.vue'
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels } from '@/calendar/labels'
+import { useCalendarCustomization } from '@/calendar/customization'
 
 const labels = useCalendarLabels()
+const customization = useCalendarCustomization()
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -26,7 +28,13 @@ const multiDayEvents = toRef(() => props.multiDayEvents)
 const singleDayEvents = toRef(() => props.singleDayEvents)
 
 const { cells } = useCalendarGrid(selectedDate)
-const { eventPositions } = useEventPositioning(multiDayEvents, singleDayEvents, selectedDate)
+const maxEventsPerDayCell = computed(() => customization.value.maxEventsPerDayCell)
+const { eventPositions } = useEventPositioning(
+  multiDayEvents,
+  singleDayEvents,
+  selectedDate,
+  maxEventsPerDayCell,
+)
 
 const allEvents = computed(() => [...props.multiDayEvents, ...props.singleDayEvents])
 
