@@ -8,19 +8,23 @@ import type { IEvent } from '@/calendar/interfaces'
 import type { TLegacyEventColor } from '@/calendar/types'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
 import { formatTime } from '@/calendar/date-format'
-import { isLegacyColor, useCalendarCustomization } from '@/calendar/customization'
+import { isLegacyColor, useCalendarCustomization, type TEventRenderView } from '@/calendar/customization'
 
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   event: IEvent
   cellDate: Date
   eventCurrentDay?: number
   eventTotalDays?: number
   class?: string
   position?: 'first' | 'middle' | 'last' | 'none'
-}>()
+  /** The view rendering this badge; week/day all-day strips reuse it. */
+  view?: TEventRenderView
+}>(), {
+  view: 'month',
+})
 
 const emit = defineEmits<{
   openDetails: [event: IEvent]
@@ -110,7 +114,7 @@ const badgeStyle = computed(() =>
 
 const slotProps = computed(() => ({
   event: props.event,
-  view: 'month' as const,
+  view: props.view,
   selected: selected.value,
   badgeVariant: store.badgeVariant,
 }))

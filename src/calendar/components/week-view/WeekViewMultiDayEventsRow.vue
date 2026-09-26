@@ -147,6 +147,7 @@ function getPosition(dayIndex: number, event: ProcessedEvent): 'first' | 'middle
             :event="row.find(e => e.startIndex <= dayIndex && e.endIndex >= dayIndex)!"
             :cell-date="startOfDay(day)"
             :position="getPosition(dayIndex, row.find(e => e.startIndex <= dayIndex && e.endIndex >= dayIndex)!)"
+            view="week"
             @open-details="emit('openDetails', $event)"
           />
         </template>

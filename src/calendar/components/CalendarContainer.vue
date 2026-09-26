@@ -140,7 +140,9 @@ const customization = computed<ICalendarCustomization>(() => ({
 }))
 provide(CALENDAR_CUSTOMIZATION_KEY, customization)
 
-const rootClasses = computed(() => cn('overflow-hidden rounded-xl border', props.classNames?.root))
+// overflow-clip, not overflow-hidden: hidden makes the root a scroll container,
+// which stops the week header's `sticky top-0` from pinning to the page.
+const rootClasses = computed(() => cn('overflow-clip rounded-xl border', props.classNames?.root))
 
 const viewRef = computed(() => props.view)
 
@@ -160,7 +162,8 @@ const addEventStartTime = ref<{ hour: number; minute: number }>()
 
 function handleOpenDetails(event: IEvent) {
   emit('eventClick', event)
-  emit('update:selectedEventId', event.id)
+  // Clicking the already-selected event clears the selection.
+  emit('update:selectedEventId', props.selectedEventId != null && props.selectedEventId === event.id ? null : event.id)
   // Built-in read dialog is opt-out: set `open-details-on-event-click="false"`
   // to handle event clicks entirely in your own app.
   if (props.openDetailsOnEventClick) {

@@ -34,10 +34,10 @@ A fully-featured calendar component for Vue 3, ported from [lramos33/big-calenda
 ### Install from npm
 
 ```bash
-npm install big-calendar-vue3 date-fns@4
+npm install big-calendar-vue3 date-fns@4 vee-validate @vee-validate/zod zod@3
 ```
 
-> If you already use [shadcn-vue](https://www.shadcn-vue.com/), most peer dependencies are already in your project. The only new one is `date-fns`.
+> If you already use [shadcn-vue](https://www.shadcn-vue.com/), most peer dependencies are already in your project. The new ones are usually `date-fns` plus the form stack (`vee-validate`, `@vee-validate/zod`, `zod`).
 
 ### Basic usage
 
@@ -85,19 +85,25 @@ The calendar manages all UI state internally. When the user creates, edits, or d
 | Package | Already installed with shadcn-vue? |
 |---------|-----------------------------------|
 | vue ^3.5 | Yes |
-| pinia ^3 | Yes |
+| pinia ^3 \|\| ^4 | Yes |
 | date-fns ^4 | No |
 | reka-ui ^2 | Yes |
 | @internationalized/date ^3 | Yes (via reka-ui) |
-| @vueuse/core ^14 | Yes |
+| @vueuse/core ^14 \|\| ^15 | Yes |
 | lucide-vue-next >=0.400 | Yes |
 | clsx ^2 | Yes |
 | tailwind-merge ^3 | Yes |
 | class-variance-authority ^0.7 | Yes |
 | vue-router ^4 | Optional |
-| vee-validate ^4 | Optional (for event dialogs) |
-| @vee-validate/zod ^4 | Optional (for event dialogs) |
-| zod ^3 | Optional (for event dialogs) |
+| vee-validate ^4 | No — required |
+| @vee-validate/zod ^4 | No — required |
+| zod ^3 | No — required |
+
+`vee-validate`, `@vee-validate/zod` and `zod` were marked optional before 1.3.0, but `BigCalendar`
+imports the Add/Edit dialogs unconditionally, so leaving them out broke the build even when the
+dialogs were disabled via `can-add` / `can-edit`. Setting those props to `false` still skips
+rendering the dialogs; it just cannot remove the import. zod stays on `^3` because
+`@vee-validate/zod` 4.x requires it.
 
 ### Data shape
 
@@ -286,7 +292,7 @@ function onCommand(p: ICalendarCommandSelect) {
 
 | Emit | Payload | Fired when |
 |------|---------|-----------|
-| `@update:selectedEventId` | `number` | An event chip is clicked (pairs with `v-model:selected-event-id`) |
+| `@update:selectedEventId` | `number \| null` | An event chip is clicked (pairs with `v-model:selected-event-id`); `null` when the already-selected event is clicked again |
 | `@show-more` | `yyyy-MM-dd` | The month view's "+N more" is activated. Attaching a listener turns the label into a real button |
 
 Read-only example (all CRUD disabled):

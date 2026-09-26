@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { DEFAULT_LABELS } from '@/calendar/labels'
 import type { ICalendarLabels } from '@/calendar/labels'
 
+// Use `message`, never `required_error`: zod 4 silently ignores `required_error` and falls
+// back to its own English text. `message` is honoured by both zod 3 and zod 4.
 export function createEventSchema(labels: ICalendarLabels = DEFAULT_LABELS) {
   return z
     .object({
@@ -9,11 +11,11 @@ export function createEventSchema(labels: ICalendarLabels = DEFAULT_LABELS) {
       title: z.string().min(1, labels.validationTitleRequired),
       description: z.string().min(1, labels.validationDescriptionRequired),
       isAllDay: z.boolean().default(false),
-      startDate: z.date({ required_error: labels.validationStartDateRequired }),
-      startTime: z.object({ hour: z.number(), minute: z.number() }, { required_error: labels.validationStartTimeRequired }).optional(),
-      endDate: z.date({ required_error: labels.validationEndDateRequired }),
-      endTime: z.object({ hour: z.number(), minute: z.number() }, { required_error: labels.validationEndTimeRequired }).optional(),
-      color: z.enum(['blue', 'green', 'red', 'yellow', 'purple', 'orange', 'gray'], { required_error: labels.validationColorRequired }),
+      startDate: z.date({ message: labels.validationStartDateRequired }),
+      startTime: z.object({ hour: z.number(), minute: z.number() }, { message: labels.validationStartTimeRequired }).optional(),
+      endDate: z.date({ message: labels.validationEndDateRequired }),
+      endTime: z.object({ hour: z.number(), minute: z.number() }, { message: labels.validationEndTimeRequired }).optional(),
+      color: z.enum(['blue', 'green', 'red', 'yellow', 'purple', 'orange', 'gray'], { message: labels.validationColorRequired }),
     })
     .refine(
       data => {

@@ -65,6 +65,7 @@ function getEventDays(event: IEvent) {
         :cell-date="selectedDate"
         :event-current-day="getEventDays(event).eventTotalDays > 1 ? getEventDays(event).eventCurrentDay : undefined"
         :event-total-days="getEventDays(event).eventTotalDays > 1 ? getEventDays(event).eventTotalDays : undefined"
+        view="day"
         @open-details="emit('openDetails', $event)"
       />
     </div>

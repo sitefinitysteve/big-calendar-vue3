@@ -91,7 +91,8 @@ const cardClasses = computed(() =>
     variantClasses.value,
     durationInMinutes.value < 35 && 'py-0 justify-center',
     !legacy.value && 'bc-event-custom-color',
-    custom.value && selected.value && 'z-10',
+    // z-index needs a positioned box to apply.
+    custom.value && selected.value && 'relative z-10',
     customization.value.classNames?.eventBlock,
     props.class,
   )

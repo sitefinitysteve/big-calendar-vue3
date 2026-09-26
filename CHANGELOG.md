@@ -5,6 +5,52 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-09-26
+
+Parity with big-calendar-react 1.3.0 + 1.3.1: one packaging fix, one validation fix, and four
+display/interaction fixes. No prop removals and no breaking changes. (There is no separate
+1.3.0 release of the Vue port; both sets of changes ship here so the version numbers line up.)
+
+### Fixed — packaging
+
+- **`vee-validate`, `@vee-validate/zod` and `zod` are no longer marked optional.** They were
+  declared in `peerDependenciesMeta` as `optional: true`, but `BigCalendar` imports
+  `AddEventDialog` / `EditEventDialog` at the top of `CalendarContainer.vue`. Those imports are
+  static, so a bundler resolves them whether or not the dialogs render: setting `can-add` /
+  `can-edit` to `false` skips the render, not the import. All three are now plain required peers.
+  zod stays on `^3` because `@vee-validate/zod` 4.x pins `zod ^3.24`.
+- **`createEventSchema` uses `message` instead of `required_error`.** zod 4 silently ignores
+  `required_error` and replaces custom/localized validation copy with its own English text;
+  `message` is honoured by zod 3 and zod 4 alike. No change in output on zod 3.
+
+### Changed — peer ranges
+
+- **`pinia` now accepts `^3 || ^4`** and **`@vueuse/core` accepts `^14 || ^15`**, so apps on
+  the newer majors no longer hit peer conflicts. Verified with the library build, demo build
+  and full test suite on pinia 4, @vueuse/core 15 and lucide-vue-next 1.0 (already covered by
+  the existing `>=0.400.0` range).
+
+### Fixed — display & interaction
+
+- **The week view header now stays pinned while you scroll.** The calendar root used
+  `overflow-hidden`, which makes it a scroll container, so the header's `sticky top-0` stuck to
+  the root instead of the page; a plain wrapper around the header was also acting as its
+  containing block. The root now uses `overflow-clip` (same rounded clipping, not a scroll
+  container) and the wrapper is `display: contents`.
+- **Clicking the already-selected event now clears the selection.** `update:selectedEventId`
+  emits `null` when the selected event is clicked again, so `v-model:selected-event-id` toggles off.
+- **A selected slot-rendered event block now sits above its neighbours.** The `z-10` applied to a
+  selected block had no effect on a static box; the block is now `relative`.
+- **`#event` / `#month-event` slots in the week and day all-day strips receive the right `view`.**
+  The badge those strips reuse always reported `view: 'month'`; it now reports `'week'` or `'day'`.
+
+### Upgrading
+
+If you already install `vee-validate`, `@vee-validate/zod` and `zod`, no action is needed;
+otherwise your package manager now resolves them as required peers. If your app worked around
+the week header by passing `:class-names="{ root: '… overflow-clip' }"`, you can drop that
+override. Hosts using `v-model:selected-event-id` should expect `null` on a second click.
+
 ## [1.2.1] - 2026-08-17
 
 Bug fixes plus one additive prop. Existing markup is unchanged except where the previous

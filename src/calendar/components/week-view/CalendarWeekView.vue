@@ -164,7 +164,9 @@ function handleTimeSlotClick(day: Date, hour: number, minute: number) {
 
   <!-- Desktop week view -->
   <div class="hidden flex-col sm:flex">
-    <div>
+    <!-- `contents`: a plain wrapper was the sticky header's containing block, so the
+         header un-stuck after 217px instead of pinning over the whole grid. -->
+    <div class="contents">
       <!-- Week header. Sticky so the all-day strip below can scroll under it. -->
       <div class="sticky top-0 z-20 flex border-b bg-background">
         <div class="w-18" />
