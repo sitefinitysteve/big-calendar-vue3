@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-11-13
+
+Dependency refresh. No API changes and no change to what the calendar renders; the published
+bundle imports exactly the same peers as 1.4.0, and the exported types are unchanged.
+
+### Changed — peer ranges
+
+- **`vue-router` now accepts `^4 || ^5`** (still optional; the library itself does not import it).
+
+### Changed — tooling (development only)
+
+- TypeScript 5.9 → 6.0. `baseUrl` was removed from `tsconfig.json` and `tsconfig.app.json`
+  (deprecated in TS 6, removed in TS 7; `paths` were already relative). TypeScript 7 is **not**
+  adopted yet: `vue-tsc` 3.x cannot run on TS 7.0, and its replacement (`@vue/content-mapper`,
+  for TS 7.1) is still in alpha.
+- vue-tsc 3.3.14, Vite 8.3.8, Vitest 5.1, `vite-plugin-dts` 5.1.2, `@vitejs/plugin-vue` 6.0.11,
+  jsdom 30 → 31. The regenerated `.d.ts` files differ only in vue-tsc's internal slot typing and
+  member order.
+- Development copies of Vue 3.5.45, Pinia 4.1, reka-ui 2.11, `@vueuse/core` 15, vue-router 5
+  (demo only) and Tailwind 4.3.5.
+
+### Known issue
+
+- `zod` stays on 3.x: `@vee-validate/zod` (latest 4.15.1) still requires `zod ^3.24`. npm audit
+  reports advisory GHSA-mrhx-c7xc-m3w5 for zod < 4.6.6; it applies to every zod 3 release and
+  has no zod 3 fix.
+
 ## [1.4.0] - 2026-11-13
 
 One additive prop: Monday-first calendars. No prop removals and no breaking changes; omitting the
