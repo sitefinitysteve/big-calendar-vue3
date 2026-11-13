@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import type { TWeekStartsOn } from '@/calendar/types'
 
 const props = withDefaults(defineProps<{
   modelValue?: Date
@@ -22,9 +23,12 @@ const props = withDefaults(defineProps<{
   locale?: Locale
   class?: string
   id?: string
+  /** First column of the popover grid: `0` = Sunday (default), `1` = Monday. */
+  weekStartsOn?: TWeekStartsOn
 }>(), {
   placeholder: 'Select a date',
   labelVariant: 'PPP',
+  weekStartsOn: 0,
 })
 
 const emit = defineEmits<{
@@ -70,7 +74,7 @@ function handleSelect(value: DateValue | undefined) {
       <Calendar
         :model-value="calendarValue"
         :locale="locale?.code"
-        :week-starts-on="0"
+        :week-starts-on="weekStartsOn"
         @update:model-value="handleSelect"
       />
     </PopoverContent>

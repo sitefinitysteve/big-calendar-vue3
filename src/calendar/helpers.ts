@@ -29,11 +29,11 @@ import {
 import type { Locale } from 'date-fns'
 import { datePattern } from '@/calendar/date-format'
 import type { ICalendarCell, IEvent } from '@/calendar/interfaces'
-import type { TCalendarView, TVisibleHours, TWorkingHours } from '@/calendar/types'
+import type { TCalendarView, TVisibleHours, TWeekStartsOn, TWorkingHours } from '@/calendar/types'
 
 // ================ Header helper functions ================ //
 
-export function rangeText(view: TCalendarView, date: Date, locale?: Locale) {
+export function rangeText(view: TCalendarView, date: Date, locale?: Locale, weekStartsOn: TWeekStartsOn = 0) {
   const formatString = datePattern(locale)
   const opts = locale ? { locale } : undefined
   let start: Date
@@ -53,8 +53,8 @@ export function rangeText(view: TCalendarView, date: Date, locale?: Locale) {
       end = endOfMonth(date)
       break
     case 'week':
-      start = startOfWeek(date)
-      end = endOfWeek(date)
+      start = startOfWeek(date, { weekStartsOn })
+      end = endOfWeek(date, { weekStartsOn })
       break
     case 'day':
       return format(date, formatString, opts)
@@ -77,12 +77,12 @@ export function navigateDate(date: Date, view: TCalendarView, direction: 'previo
   return operations[view](date, 1)
 }
 
-export function getEventsCount(events: IEvent[], date: Date, view: TCalendarView): number {
+export function getEventsCount(events: IEvent[], date: Date, view: TCalendarView, weekStartsOn: TWeekStartsOn = 0): number {
   const compareFns = {
     agenda: isSameMonth,
     year: isSameYear,
     day: isSameDay,
-    week: isSameWeek,
+    week: (a: Date, b: Date) => isSameWeek(a, b, { weekStartsOn }),
     month: isSameMonth,
   }
 
@@ -171,15 +171,24 @@ export function getVisibleHours(visibleHours: TVisibleHours, singleDayEvents: IE
 
 // ================ Month view helper functions ================ //
 
-export function getCalendarCells(selectedDate: Date): ICalendarCell[] {
+/** Rotates a Sunday-first list of seven weekday items so `weekStartsOn` comes first. */
+export function rotateWeekdays<T>(sundayFirst: readonly T[], weekStartsOn: TWeekStartsOn = 0): T[] {
+  return [...sundayFirst.slice(weekStartsOn), ...sundayFirst.slice(0, weekStartsOn)]
+}
+
+/** Number of blank/leading cells before day 1 of `date`'s month in a `weekStartsOn`-first grid. */
+export function leadingDays(date: Date, weekStartsOn: TWeekStartsOn = 0): number {
+  return (new Date(date.getFullYear(), date.getMonth(), 1).getDay() - weekStartsOn + 7) % 7
+}
+
+export function getCalendarCells(selectedDate: Date, weekStartsOn: TWeekStartsOn = 0): ICalendarCell[] {
   const currentYear = selectedDate.getFullYear()
   const currentMonth = selectedDate.getMonth()
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate()
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay()
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth)
-  const firstDayOfMonth = getFirstDayOfMonth(currentYear, currentMonth)
+  const firstDayOfMonth = leadingDays(selectedDate, weekStartsOn)
   const daysInPrevMonth = getDaysInMonth(currentYear, currentMonth - 1)
   const totalDays = firstDayOfMonth + daysInMonth
 

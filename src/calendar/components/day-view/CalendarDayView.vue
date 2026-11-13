@@ -24,7 +24,7 @@ import DayViewMultiDayEventsRow from '@/calendar/components/day-view/DayViewMult
 
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
-import { useCalendarCustomization } from '@/calendar/customization'
+import { useCalendarCustomization, useWeekStartsOn } from '@/calendar/customization'
 import {
   formatDate as fmtDate,
   formatHour as fmtHour,
@@ -42,6 +42,7 @@ const STOCK_SLOT_CLASSES = [
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
 const customization = useCalendarCustomization()
+const weekStartsOn = useWeekStartsOn()
 
 // Stock 96px hour keeps its literal Tailwind classes so default output is
 // byte-identical; a custom hourHeight switches to inline positioning.
@@ -278,6 +279,7 @@ function getEventStyle(event: IEvent, groupIndex: number) {
       <Calendar
         class="mx-auto w-fit"
         :model-value="calendarDateValue"
+        :week-starts-on="weekStartsOn"
         @update:model-value="handleCalendarSelect"
       />
 

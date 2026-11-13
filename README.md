@@ -278,6 +278,7 @@ function onCommand(p: ICalendarCommandSelect) {
 | `allDayMaxRows` | `number` | uncapped | Week all-day strip: max badge rows before the strip scrolls internally |
 | `classNames` | `ICalendarClassNames` | `{}` | Extra classes for `root`, `header`, `dayCell`, `hourRow`, `eventBlock`, `timeline` |
 | `dayCellClassName` | `(date: Date) => string \| undefined` | — | Per-day extra classes for month-view cells |
+| `weekStartsOn` | `0 \| 1` | `0` | First day of the week in every grid and range: `0` = Sunday, `1` = Monday. See [First day of the week](#first-day-of-the-week) |
 
 ### Slots
 
@@ -350,10 +351,21 @@ The pattern helpers are exported for use in your own components:
 `datePattern`, `longDatePattern`, `timePattern`, `hourPattern`, `dateTimePattern`, `is24HourLocale`,
 and the formatters `formatDate`, `formatLongDate`, `formatTime`, `formatHour`, `formatDateTime`.
 
-**Known limitation:** the week grid always starts on Sunday. `dateLocale` does not yet move it, so
-locales that start the week on Monday (`de`, `en-GB`) or Saturday (`ar`) still get a Sunday-first
-grid. This is deliberate for now — the month view's weekday header is a fixed `Sun`–`Sat` label
-list, and moving one view without the other would leave the calendar disagreeing with itself.
+### First day of the week
+
+The week starts on Sunday unless you pass `weekStartsOn` (since 1.4.0). `dateLocale` does **not**
+move it on its own, so an en-GB or de host opts in explicitly:
+
+```vue
+<BigCalendar v-model:view="view" :date-locale="enGB" :week-starts-on="1" />
+```
+
+`weekStartsOn` accepts `0` (Sunday, the default) or `1` (Monday) and moves every week-shaped
+surface together: the month grid's leading days and weekday header, the year view's mini-month
+grids and initials, the week view's columns and the events it loads, the header's range text and
+event count, the day view's mini date picker, and the date pickers in the Add/Edit event dialogs. The weekday label keys (`weekdaySun` …
+`weekdaySat`) are unchanged; they are rotated, not renamed. Working hours stay keyed by
+`Date.getDay()` (`0` = Sunday) whatever the week start.
 
 Omitting `dateLocale` is not the same as passing `enUS`. With no locale the calendar uses its
 built-in US-English patterns, which is why the two English columns above differ on the agenda

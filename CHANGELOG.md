@@ -5,6 +5,37 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-11-13
+
+One additive prop: Monday-first calendars. No prop removals and no breaking changes; omitting the
+new prop renders exactly what 1.3.1 rendered.
+
+### Added
+
+- **`weekStartsOn?: 0 | 1`** on `BigCalendar` (default `0`, Sunday). Set `:week-starts-on="1"` for
+  a Monday-first calendar (en-GB, most of Europe). It moves every week-shaped surface together:
+  - month view: leading days of the grid, the weekday header order, and the first column's
+    border (which used to be tied to Sunday);
+  - year view: each mini month's leading blanks and weekday initials;
+  - week view: the seven columns, the all-day strip, the events loaded for the week, and the
+    today check;
+  - header: the week range text (`Oct 5, 2026 - Oct 11, 2026`) and the week event count;
+  - day view: the mini date picker's first column;
+  - Add/Edit event dialogs: the start and end date pickers (`SingleDayPicker` used to hardcode
+    `:week-starts-on="0"`). `SingleDayPicker` gains its own `weekStartsOn` prop (default `0`).
+- `weekStartsOn` is also on `ICalendarCustomization`, so custom components can read it through
+  the new **`useWeekStartsOn()`** composable (falls back to `0` outside a `BigCalendar`).
+- Exported type **`TWeekStartsOn`** and helpers **`rotateWeekdays(sundayFirst, weekStartsOn)`**
+  and **`leadingDays(date, weekStartsOn)`**.
+- `rangeText`, `getEventsCount`, `getCalendarCells`, `useCalendarGrid` and `useFilteredEvents`
+  take an optional trailing `weekStartsOn` argument (default `0`), so existing calls are unchanged.
+
+### Upgrading
+
+No action needed. `dateLocale` still does not change the week start by itself: pass
+`weekStartsOn` explicitly alongside a Monday-first locale. Working hours remain keyed by
+`Date.getDay()` (`0` = Sunday).
+
 ## [1.3.1] - 2026-09-26
 
 Parity with big-calendar-react 1.3.0 + 1.3.1: one packaging fix, one validation fix, and four

@@ -6,10 +6,12 @@ import { useEventPositioning } from '@/calendar/composables/useEventPositioning'
 import DayCell from '@/calendar/components/month-view/DayCell.vue'
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels } from '@/calendar/labels'
-import { useCalendarCustomization } from '@/calendar/customization'
+import { useCalendarCustomization, useWeekStartsOn } from '@/calendar/customization'
+import { rotateWeekdays } from '@/calendar/helpers'
 
 const labels = useCalendarLabels()
 const customization = useCalendarCustomization()
+const weekStartsOn = useWeekStartsOn()
 
 const props = defineProps<{
   singleDayEvents: IEvent[]
@@ -27,7 +29,7 @@ const selectedDate = toRef(() => store.selectedDate)
 const multiDayEvents = toRef(() => props.multiDayEvents)
 const singleDayEvents = toRef(() => props.singleDayEvents)
 
-const { cells } = useCalendarGrid(selectedDate)
+const { cells } = useCalendarGrid(selectedDate, weekStartsOn)
 const maxEventsPerDayCell = computed(() => customization.value.maxEventsPerDayCell)
 const { eventPositions } = useEventPositioning(
   multiDayEvents,
@@ -38,11 +40,11 @@ const { eventPositions } = useEventPositioning(
 
 const allEvents = computed(() => [...props.multiDayEvents, ...props.singleDayEvents])
 
-const WEEK_DAYS = computed(() => [
+const WEEK_DAYS = computed(() => rotateWeekdays([
   labels.value.weekdaySun, labels.value.weekdayMon, labels.value.weekdayTue,
   labels.value.weekdayWed, labels.value.weekdayThu, labels.value.weekdayFri,
   labels.value.weekdaySat,
-])
+], weekStartsOn.value))
 </script>
 
 <template>

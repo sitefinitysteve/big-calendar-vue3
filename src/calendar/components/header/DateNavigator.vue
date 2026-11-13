@@ -9,6 +9,7 @@ import { getEventsCount, navigateDate, rangeText } from '@/calendar/helpers'
 import type { IEvent } from '@/calendar/interfaces'
 import type { TCalendarView } from '@/calendar/types'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { useWeekStartsOn } from '@/calendar/customization'
 
 const props = defineProps<{
   view: TCalendarView
@@ -18,13 +19,14 @@ const props = defineProps<{
 const store = useCalendarStore()
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
+const weekStartsOn = useWeekStartsOn()
 
 const month = computed(() => {
   const name = format(store.selectedDate, 'MMMM', dateLocale.value ? { locale: dateLocale.value } : undefined)
   return name.charAt(0).toUpperCase() + name.slice(1)
 })
 const year = computed(() => store.selectedDate.getFullYear())
-const eventCount = computed(() => getEventsCount(props.events, store.selectedDate, props.view))
+const eventCount = computed(() => getEventsCount(props.events, store.selectedDate, props.view, weekStartsOn.value))
 
 function handlePrevious() {
   store.setSelectedDate(navigateDate(store.selectedDate, props.view, 'previous'))
@@ -54,7 +56,7 @@ function handleNext() {
       </Button>
 
       <p class="text-sm capitalize text-muted-foreground">
-        {{ rangeText(view, store.selectedDate, dateLocale) }}
+        {{ rangeText(view, store.selectedDate, dateLocale, weekStartsOn) }}
       </p>
 
       <Button

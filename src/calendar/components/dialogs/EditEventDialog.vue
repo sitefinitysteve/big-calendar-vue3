@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { TimeInput } from '@/components/ui/time-input'
 import { SingleDayPicker } from '@/components/ui/single-day-picker'
+import { useWeekStartsOn } from '@/calendar/customization'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   FormControl,
@@ -56,6 +57,7 @@ const store = useCalendarStore()
 const { updateEvent } = useUpdateEvent()
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
+const weekStartsOn = useWeekStartsOn()
 
 const schema = computed(() => createEventSchema(labels.value))
 
@@ -223,6 +225,7 @@ const EVENT_COLORS = computed(() => [
               <FormLabel>{{ labels.fieldStartDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
+                  :week-starts-on="weekStartsOn"
                   :locale="dateLocale"
                   :model-value="value"
                   :placeholder="labels.placeholderSelectDate"
@@ -254,6 +257,7 @@ const EVENT_COLORS = computed(() => [
               <FormLabel>{{ labels.fieldEndDate }}</FormLabel>
               <FormControl>
                 <SingleDayPicker
+                  :week-starts-on="weekStartsOn"
                   :locale="dateLocale"
                   :model-value="value"
                   :placeholder="labels.placeholderSelectDate"

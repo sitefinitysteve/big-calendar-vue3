@@ -9,3 +9,5 @@ export type TEventColor = TLegacyEventColor | (string & {})
 export type TBadgeVariant = 'dot' | 'colored' | 'mixed'
 export type TWorkingHours = { [key: number]: { from: number; to: number } }
 export type TVisibleHours = { from: number; to: number }
+/** First column of every week grid: `0` = Sunday (default), `1` = Monday. */
+export type TWeekStartsOn = 0 | 1

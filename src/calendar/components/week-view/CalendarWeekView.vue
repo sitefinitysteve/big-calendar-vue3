@@ -24,7 +24,7 @@ import WeekViewMultiDayEventsRow from '@/calendar/components/week-view/WeekViewM
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
 import { formatHour } from '@/calendar/date-format'
-import { useCalendarCustomization } from '@/calendar/customization'
+import { useCalendarCustomization, useWeekStartsOn } from '@/calendar/customization'
 
 /** Literal (Tailwind-scannable) classes for the four 15-minute slots at 96px/hour. */
 const STOCK_SLOT_CLASSES = [
@@ -37,6 +37,7 @@ const STOCK_SLOT_CLASSES = [
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
 const customization = useCalendarCustomization()
+const weekStartsOn = useWeekStartsOn()
 
 // Stock 96px hour keeps its literal Tailwind classes so default output is
 // byte-identical; a custom hourHeight switches to inline positioning.
@@ -94,8 +95,8 @@ const hours = computed(() => visibleHoursData.value.hours)
 const earliestEventHour = computed(() => visibleHoursData.value.earliestEventHour)
 const latestEventHour = computed(() => visibleHoursData.value.latestEventHour)
 
-const weekStart = computed(() => startOfWeek(store.selectedDate))
-const showsToday = computed(() => isSameWeek(store.selectedDate, new Date()))
+const weekStart = computed(() => startOfWeek(store.selectedDate, { weekStartsOn: weekStartsOn.value }))
+const showsToday = computed(() => isSameWeek(store.selectedDate, new Date(), { weekStartsOn: weekStartsOn.value }))
 
 const weekDays = computed(() =>
   Array.from({ length: 7 }, (_, i) => addDays(weekStart.value, i))

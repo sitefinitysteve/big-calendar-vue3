@@ -1,7 +1,7 @@
 import type { ComputedRef, InjectionKey, Slot } from 'vue'
 import { computed, inject } from 'vue'
 import type { IEvent } from '@/calendar/interfaces'
-import type { TBadgeVariant, TLegacyEventColor } from '@/calendar/types'
+import type { TBadgeVariant, TLegacyEventColor, TWeekStartsOn } from '@/calendar/types'
 
 /** The seven colors that ship with their own Tailwind class maps. */
 export const LEGACY_EVENT_COLORS: TLegacyEventColor[] = [
@@ -72,6 +72,8 @@ export interface ICalendarCustomization {
   onShowMore?: (date: string) => void
   classNames?: ICalendarClassNames
   dayCellClassName?: (date: Date) => string | undefined
+  /** First day of every week grid: `0` = Sunday (default), `1` = Monday. */
+  weekStartsOn?: TWeekStartsOn
 }
 
 /** Defaults reproduce v1.1.0 behavior exactly for standalone-exported views. */
@@ -90,4 +92,10 @@ export const CALENDAR_CUSTOMIZATION_KEY: InjectionKey<ComputedRef<ICalendarCusto
  */
 export function useCalendarCustomization(): ComputedRef<ICalendarCustomization> {
   return inject(CALENDAR_CUSTOMIZATION_KEY) ?? computed(() => DEFAULT_CUSTOMIZATION)
+}
+
+/** The nearest `<BigCalendar>`'s `weekStartsOn`; `0` (Sunday) for standalone views. */
+export function useWeekStartsOn(): ComputedRef<TWeekStartsOn> {
+  const customization = useCalendarCustomization()
+  return computed(() => customization.value.weekStartsOn ?? 0)
 }

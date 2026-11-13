@@ -35,6 +35,8 @@ export {
   getCalendarCells,
   calculateMonthEventPositions,
   getMonthCellEvents,
+  rotateWeekdays,
+  leadingDays,
 } from '@/calendar/helpers'
 
 // Types & Interfaces
@@ -45,6 +47,7 @@ export type {
   TBadgeVariant,
   TWorkingHours,
   TVisibleHours,
+  TWeekStartsOn,
 } from '@/calendar/types'
 export type { IEvent, IUser, ICalendarCell, ICalendarCommand, ICalendarCommandSelect } from '@/calendar/interfaces'
 
@@ -52,6 +55,7 @@ export type { IEvent, IUser, ICalendarCell, ICalendarCommand, ICalendarCommandSe
 export {
   CALENDAR_CUSTOMIZATION_KEY,
   useCalendarCustomization,
+  useWeekStartsOn,
   isLegacyColor,
   LEGACY_EVENT_COLORS,
   DEFAULT_CUSTOMIZATION,

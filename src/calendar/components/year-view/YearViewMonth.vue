@@ -6,9 +6,12 @@ import { cn } from '@/lib/utils'
 import YearViewDayCell from '@/calendar/components/year-view/YearViewDayCell.vue'
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels, useDateLocale } from '@/calendar/labels'
+import { useWeekStartsOn } from '@/calendar/customization'
+import { leadingDays, rotateWeekdays } from '@/calendar/helpers'
 
 const labels = useCalendarLabels()
 const dateLocale = useDateLocale()
+const weekStartsOn = useWeekStartsOn()
 
 const props = defineProps<{
   month: Date
@@ -22,11 +25,11 @@ const emit = defineEmits<{
 
 const store = useCalendarStore()
 
-const WEEK_DAYS = computed(() => [
+const WEEK_DAYS = computed(() => rotateWeekdays([
   labels.value.weekdaySun, labels.value.weekdayMon, labels.value.weekdayTue,
   labels.value.weekdayWed, labels.value.weekdayThu, labels.value.weekdayFri,
   labels.value.weekdaySat,
-])
+], weekStartsOn.value))
 
 const monthName = computed(() => {
   const name = format(props.month, 'MMMM', dateLocale.value ? { locale: dateLocale.value } : undefined)
@@ -34,8 +37,7 @@ const monthName = computed(() => {
 })
 
 const days = computed(() => {
-  const firstDay = startOfMonth(props.month)
-  const dayOfWeek = firstDay.getDay()
+  const dayOfWeek = leadingDays(props.month, weekStartsOn.value)
   const totalDays = getDaysInMonth(props.month)
 
   const blanks: (null)[] = Array.from({ length: dayOfWeek }, () => null)

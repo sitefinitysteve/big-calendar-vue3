@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import MonthEventBadge from '@/calendar/components/month-view/MonthEventBadge.vue'
 import type { IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels } from '@/calendar/labels'
-import { useCalendarCustomization } from '@/calendar/customization'
+import { useCalendarCustomization, useWeekStartsOn } from '@/calendar/customization'
 
 /** One badge row: `h-6.5` (26px) plus the `gap-1` (4px) that follows it. */
 const ALL_DAY_ROW_HEIGHT = 26
@@ -33,9 +33,10 @@ const emit = defineEmits<{
 
 const labels = useCalendarLabels()
 const customization = useCalendarCustomization()
+const weekStartsOn = useWeekStartsOn()
 
-const weekStart = computed(() => startOfWeek(props.selectedDate))
-const weekEnd = computed(() => endOfWeek(props.selectedDate))
+const weekStart = computed(() => startOfWeek(props.selectedDate, { weekStartsOn: weekStartsOn.value }))
+const weekEnd = computed(() => endOfWeek(props.selectedDate, { weekStartsOn: weekStartsOn.value }))
 const weekDays = computed(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart.value, i)))
 
 interface ProcessedEvent extends IEvent {

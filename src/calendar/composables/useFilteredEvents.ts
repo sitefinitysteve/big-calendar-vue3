@@ -1,9 +1,9 @@
 import { computed, type Ref } from 'vue'
-import { parseISO, isSameDay } from 'date-fns'
+import { parseISO, isSameDay, startOfWeek, endOfWeek } from 'date-fns'
 import { useCalendarStore } from '@/stores/calendar'
-import type { TCalendarView } from '@/calendar/types'
+import type { TCalendarView, TWeekStartsOn } from '@/calendar/types'
 
-export function useFilteredEvents(view: Ref<TCalendarView>) {
+export function useFilteredEvents(view: Ref<TCalendarView>, weekStartsOn?: Ref<TWeekStartsOn>) {
   const store = useCalendarStore()
 
   const filteredEvents = computed(() => {
@@ -30,13 +30,9 @@ export function useFilteredEvents(view: Ref<TCalendarView>) {
       }
 
       if (view.value === 'week') {
-        const dayOfWeek = selectedDate.getDay()
-        const weekStart = new Date(selectedDate)
-        weekStart.setDate(selectedDate.getDate() - dayOfWeek)
-        weekStart.setHours(0, 0, 0, 0)
-        const weekEnd = new Date(weekStart)
-        weekEnd.setDate(weekStart.getDate() + 6)
-        weekEnd.setHours(23, 59, 59, 999)
+        const options = { weekStartsOn: weekStartsOn?.value ?? 0 }
+        const weekStart = startOfWeek(selectedDate, options)
+        const weekEnd = endOfWeek(selectedDate, options)
         return eventStartDate <= weekEnd && eventEndDate >= weekStart && isUserMatch
       }
 

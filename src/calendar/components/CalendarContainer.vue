@@ -2,7 +2,7 @@
 import { computed, getCurrentInstance, provide, ref, useSlots } from 'vue'
 import { format } from 'date-fns'
 import { Pencil, Trash2 } from 'lucide-vue-next'
-import type { TCalendarView } from '@/calendar/types'
+import type { TCalendarView, TWeekStartsOn } from '@/calendar/types'
 import type { IEvent, ICalendarCommand, ICalendarCommandSelect } from '@/calendar/interfaces'
 import type { Locale } from 'date-fns'
 import type { ICalendarLabels } from '@/calendar/labels'
@@ -63,6 +63,8 @@ const props = withDefaults(defineProps<{
   classNames?: ICalendarClassNames
   /** Per-day extra classes for month-view cells. */
   dayCellClassName?: (date: Date) => string | undefined
+  /** First day of the week in every grid and range: `0` = Sunday (default), `1` = Monday. */
+  weekStartsOn?: TWeekStartsOn
 }>(), {
   canAdd: true,
   canEdit: true,
@@ -80,6 +82,7 @@ const props = withDefaults(defineProps<{
   hideHeader: false,
   hourHeight: 96,
   maxEventsPerDayCell: 3,
+  weekStartsOn: 0,
 })
 
 const emit = defineEmits<{
@@ -137,6 +140,7 @@ const customization = computed<ICalendarCustomization>(() => ({
   onShowMore: hasListener('onShowMore') ? (date: string) => emit('showMore', date) : undefined,
   classNames: props.classNames,
   dayCellClassName: props.dayCellClassName,
+  weekStartsOn: props.weekStartsOn,
 }))
 provide(CALENDAR_CUSTOMIZATION_KEY, customization)
 
@@ -150,7 +154,7 @@ function handleChangeView(view: TCalendarView) {
   emit('update:view', view)
 }
 
-const { filteredEvents, singleDayEvents, multiDayEvents } = useFilteredEvents(viewRef)
+const { filteredEvents, singleDayEvents, multiDayEvents } = useFilteredEvents(viewRef, computed(() => props.weekStartsOn))
 
 // Dialog state
 const detailsOpen = ref(false)

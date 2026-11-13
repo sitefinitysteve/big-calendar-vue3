@@ -8,10 +8,11 @@ import { cn } from '@/lib/utils'
 import { getMonthCellEvents } from '@/calendar/helpers'
 import type { ICalendarCell, IEvent } from '@/calendar/interfaces'
 import { useCalendarLabels } from '@/calendar/labels'
-import { useCalendarCustomization } from '@/calendar/customization'
+import { useCalendarCustomization, useWeekStartsOn } from '@/calendar/customization'
 
 const labels = useCalendarLabels()
 const customization = useCalendarCustomization()
+const weekStartsOn = useWeekStartsOn()
 
 const props = defineProps<{
   cell: ICalendarCell
@@ -40,12 +41,12 @@ const cellEvents = computed(() =>
 
 const hiddenCount = computed(() => cellEvents.value.length - maxEventsPerDayCell.value)
 
-const isSunday = computed(() => props.cell.date.getDay() === 0)
+const isFirstColumn = computed(() => props.cell.date.getDay() === weekStartsOn.value)
 
 const cellClasses = computed(() =>
   cn(
     'flex h-full flex-col gap-1 border-l border-t py-1.5 lg:pb-2 lg:pt-1',
-    isSunday.value && 'border-l-0',
+    isFirstColumn.value && 'border-l-0',
     customization.value.classNames?.dayCell,
     customization.value.dayCellClassName?.(props.cell.date),
   ),
